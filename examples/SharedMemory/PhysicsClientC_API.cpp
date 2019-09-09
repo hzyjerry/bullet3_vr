@@ -241,7 +241,7 @@ B3_SHARED_API void b3LoadMJCFCommandSetFlags(b3SharedMemoryCommandHandle command
 	}
 }
 
-B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothCommandInit(b3PhysicsClientHandle physClient, const char* fileName, double scale, double mass, const double* position, const double* orientation, int bodyAnchorId, const int* anchors, double collisionMargin)
+B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothCommandInit(b3PhysicsClientHandle physClient, const char* fileName, double scale, double mass, const double* position, const double* orientation, int bodyAnchorId, const int* anchors, double collisionMargin, const double* color)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;
 	b3Assert(cl);
@@ -272,6 +272,10 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothCommandInit(b3PhysicsClient
         command->m_loadClothArguments.m_orientation[1] = orientation[1];
         command->m_loadClothArguments.m_orientation[2] = orientation[2];
         command->m_loadClothArguments.m_orientation[3] = orientation[3];
+		command->m_loadClothArguments.m_colorRGBA[0] = color[0];
+        command->m_loadClothArguments.m_colorRGBA[1] = color[1];
+        command->m_loadClothArguments.m_colorRGBA[2] = color[2];
+        command->m_loadClothArguments.m_colorRGBA[3] = color[3];
         command->m_loadClothArguments.m_bodyAnchorId = bodyAnchorId;
         int i = 0;
         for (i = 0; i < 25; i++) {

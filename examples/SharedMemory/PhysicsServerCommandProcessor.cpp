@@ -7336,6 +7336,7 @@ bool PhysicsServerCommandProcessor::processLoadClothCommand(const struct SharedM
                 }
                 psb->appendAnchor(loadClothArgs.m_anchors[i], bodyRigid, disableCollisionBetweenLinkedBodies, influence);
             }
+			psb->setSoftBodyColor(btVector4(loadClothArgs.m_colorRGBA[0], loadClothArgs.m_colorRGBA[1], loadClothArgs.m_colorRGBA[2], loadClothArgs.m_colorRGBA[3]));
 
             m_data->m_dynamicsWorld->addSoftBody(psb);
             m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
