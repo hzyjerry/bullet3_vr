@@ -42,7 +42,8 @@ struct fDrawFlags
 		Joints = 0x1000,
 		/* presets	*/
 		Std = Links + Faces + Tetras + Anchors + Notes + Joints,
-		StdTetra = Std - Faces + Tetras
+		StdTetra = Std - Faces + Tetras,
+		StdNAnch = Std - Anchors
 	};
 };
 

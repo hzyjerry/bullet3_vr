@@ -227,7 +227,7 @@ void MyKeyboardCallback(int key, int state)
 		if (key == 'w' && state)
 		{
 			visualWireframe = !visualWireframe;
-			gDebugDrawFlags ^= btIDebugDraw::DBG_DrawWireframe;
+			// gDebugDrawFlags ^= btIDebugDraw::DBG_DrawWireframe;
 		}
 
 		if (key == 'v' && state)
@@ -1234,7 +1234,9 @@ void OpenGLExampleBrowser::update(float deltaTime)
 		{
 			if (visualWireframe)
 			{
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				sCurrentDemo->physicsDebugDraw(gDebugDrawFlags);
 			}
 			BT_PROFILE("Render Scene");
 			sCurrentDemo->renderScene();

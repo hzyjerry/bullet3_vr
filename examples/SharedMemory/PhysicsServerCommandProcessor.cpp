@@ -7340,7 +7340,9 @@ bool PhysicsServerCommandProcessor::processLoadClothCommand(const struct SharedM
 
             m_data->m_dynamicsWorld->addSoftBody(psb);
             m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
-            m_data->m_guiHelper->autogenerateGraphicsObjects(this->m_data->m_dynamicsWorld);
+            if (!loadClothArgs.m_wireframe) {
+				m_data->m_guiHelper->autogenerateGraphicsObjects(this->m_data->m_dynamicsWorld);
+			}
             int bodyUniqueId = m_data->m_bodyHandles.allocHandle();
             InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(bodyUniqueId);
             bodyHandle->m_softBody = psb;
@@ -11730,7 +11732,8 @@ void PhysicsServerCommandProcessor::physicsDebugDraw(int debugDrawFlags)
 		if (m_data->m_dynamicsWorld->getDebugDrawer())
 		{
 			m_data->m_dynamicsWorld->getDebugDrawer()->setDebugMode(debugDrawFlags);
-			m_data->m_dynamicsWorld->debugDrawWorld();
+			// m_data->m_dynamicsWorld->debugDrawWorld();
+			m_data->m_dynamicsWorld->debugDraw();
 
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 			for (int i = 0; i < m_data->m_dynamicsWorld->getSoftBodyArray().size(); i++)
