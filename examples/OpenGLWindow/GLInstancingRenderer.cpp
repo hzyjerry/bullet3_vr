@@ -1878,7 +1878,11 @@ void GLInstancingRenderer::drawLines(const float* positions, const float color[4
 	glUseProgram(linesShader);
 	glUniformMatrix4fv(lines_ProjectionMatrix, 1, false, &m_data->m_projectionMatrix[0]);
 	glUniformMatrix4fv(lines_ModelViewMatrix, 1, false, &m_data->m_viewMatrix[0]);
-	glUniform4f(lines_colour, color[0], color[1], color[2], color[3]);
+	if (glIsEnabled(GL_BLEND)) {
+		glUniform4f(lines_colour, color[0], color[1], color[2], color[3]);
+	} else {
+		glUniform4f(lines_colour, color[0], color[1], color[2], 1);
+	}
 
 	//	glPointSize(pointDrawSize);
 	glBindVertexArray(linesVertexArrayObject);
@@ -1906,7 +1910,7 @@ void GLInstancingRenderer::drawLines(const float* positions, const float color[4
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSizeInBytes, NULL, GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indexBufferSizeInBytes, indices);
 
-		glDrawElements(GL_LINES, numIndices, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

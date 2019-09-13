@@ -39,7 +39,7 @@ btSoftMultiBodyDynamicsWorld::btSoftMultiBodyDynamicsWorld(
 		m_ownsSolver = true;
 	}
 
-	m_drawFlags = fDrawFlags::StdNAnch;
+	m_drawFlags = fDrawFlags::StdTriangle;
 	m_drawNodeTree = true;
 	m_drawFaceTree = false;
 	m_drawClusterTree = false;

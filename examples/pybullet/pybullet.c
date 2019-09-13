@@ -1878,7 +1878,7 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 {
 	int physicsClientId = 0;
 
-	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "physicsClientId", "rgbaColor", "wireframe", NULL};
+	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "physicsClientId", "rgbaColor", NULL};
 
 	int bodyUniqueId = -1;
 	const char* fileName = "";
@@ -1894,13 +1894,11 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 	double collisionMargin = 0.01;
 
 	PyObject* rgbaColorObj = 0;
-	double rgbaColorArray[4] = {60. / 256., 186. / 256., 84. / 256., 1}; //green
-
-	int wireframe = 0;
+	double rgbaColorArray[4] = {139. / 256., 195. / 256., 74. / 256.,0.6}; //green
 
 	b3PhysicsClientHandle sm = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdiOp", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &physicsClientId, &rgbaColorObj, &wireframe))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdiO", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &physicsClientId, &rgbaColorObj))
 	{
 		return NULL;
 	}
@@ -1961,7 +1959,7 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 	{
 		b3SharedMemoryStatusHandle statusHandle;
 		int statusType;
-		b3SharedMemoryCommandHandle command = b3LoadClothCommandInit(sm, fileName, scale, mass, positionArray, orientationArray, bodyAnchorId, anchorsArray, collisionMargin, rgbaColorArray, wireframe);
+		b3SharedMemoryCommandHandle command = b3LoadClothCommandInit(sm, fileName, scale, mass, positionArray, orientationArray, bodyAnchorId, anchorsArray, collisionMargin, rgbaColorArray);
 
 		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
 		statusType = b3GetStatusType(statusHandle);

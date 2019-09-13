@@ -515,7 +515,6 @@ struct LoadClothArgs
     int m_anchors[25];
 	double m_collisionMargin;
 	double m_colorRGBA[4];
-	int m_wireframe;
 };
 
 struct ClothParamsArgs

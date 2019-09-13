@@ -82,6 +82,26 @@ public:
 		m_lineIndices.push_back(m_lineIndices.size());
 	}
 
+	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color)
+	{
+		if (m_currentLineColor != color || m_linePoints.size() >= BT_LINE_BATCH_SIZE)
+		{
+			flushLines();
+			m_currentLineColor = color;
+		}
+		MyDebugVec3 vertex0(v0);
+		MyDebugVec3 vertex1(v1);
+		MyDebugVec3 vertex2(v2);
+
+		m_linePoints.push_back(vertex0);
+		m_linePoints.push_back(vertex1);
+		m_linePoints.push_back(vertex2);
+
+		m_lineIndices.push_back(m_lineIndices.size());
+		m_lineIndices.push_back(m_lineIndices.size());
+		m_lineIndices.push_back(m_lineIndices.size());
+	}
+
 	virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color)
 	{
 		drawLine(PointOnB, PointOnB + normalOnB * distance, color);
