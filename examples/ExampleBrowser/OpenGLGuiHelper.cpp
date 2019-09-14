@@ -82,7 +82,7 @@ public:
 		m_lineIndices.push_back(m_lineIndices.size());
 	}
 
-	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color)
+	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color, const btVector4& colorLine)
 	{
 		if (m_currentLineColor != color || m_linePoints.size() >= BT_LINE_BATCH_SIZE)
 		{

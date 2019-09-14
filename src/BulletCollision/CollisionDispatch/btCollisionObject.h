@@ -124,6 +124,8 @@ protected:
 
 	btVector4 m_softBodyColor;
 
+	btVector4 m_softBodyLineColor;
+
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
@@ -591,6 +593,16 @@ public:
 	const btVector4& getSoftBodyColor() const
 	{
 		return m_softBodyColor;
+	}
+
+	void setSoftBodyLineColor(const btVector4& colorRGB)
+	{
+		m_softBodyLineColor = colorRGB;
+	}
+
+	const btVector4& getSoftBodyLineColor() const
+	{
+		return m_softBodyLineColor;
 	}
 
 	inline bool checkCollideWith(const btCollisionObject* co) const

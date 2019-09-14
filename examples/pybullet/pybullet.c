@@ -1878,7 +1878,7 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 {
 	int physicsClientId = 0;
 
-	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "physicsClientId", "rgbaColor", NULL};
+	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "physicsClientId", "rgbaColor", "rgbaLineColor", NULL};
 
 	int bodyUniqueId = -1;
 	const char* fileName = "";
@@ -1896,9 +1896,12 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 	PyObject* rgbaColorObj = 0;
 	double rgbaColorArray[4] = {139. / 256., 195. / 256., 74. / 256.,0.6}; //green
 
+	PyObject* rgbaLineColorObj = 0;
+	double rgbaLineColorArray[4] = {139. / 256., 195. / 256., 74. / 256.,0.6}; //green
+
 	b3PhysicsClientHandle sm = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdiO", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &physicsClientId, &rgbaColorObj))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdiOO", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &physicsClientId, &rgbaColorObj, &rgbaLineColorObj))
 	{
 		return NULL;
 	}
@@ -1955,11 +1958,22 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 		}
 	}
 
+	if (rgbaLineColorObj)
+	{
+		int i = 0;
+		PyObject* rgbaLineColorSeq = PySequence_Fast(rgbaLineColorObj, "expected a position sequence");
+		int rgbaLineColorSize = PySequence_Size(rgbaLineColorObj);
+		for (i = 0; i < rgbaLineColorSize; i++)
+		{
+			rgbaLineColorArray[i] = pybullet_internalGetFloatFromSequence(rgbaLineColorSeq, i);
+		}
+	}
+
 	if (strlen(fileName))
 	{
 		b3SharedMemoryStatusHandle statusHandle;
 		int statusType;
-		b3SharedMemoryCommandHandle command = b3LoadClothCommandInit(sm, fileName, scale, mass, positionArray, orientationArray, bodyAnchorId, anchorsArray, collisionMargin, rgbaColorArray);
+		b3SharedMemoryCommandHandle command = b3LoadClothCommandInit(sm, fileName, scale, mass, positionArray, orientationArray, bodyAnchorId, anchorsArray, collisionMargin, rgbaColorArray, rgbaLineColorArray);
 
 		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
 		statusType = b3GetStatusType(statusHandle);

@@ -543,6 +543,7 @@ MultithreadedDebugDrawer : public btIDebugDraw
 	btAlignedObjectArray<btAlignedObjectArray<unsigned int> > m_sortedIndices;
 	btAlignedObjectArray<btAlignedObjectArray<btVector3FloatData> > m_sortedLines;
 	btHashMap<ColorWidth, int> m_hashedLines;
+	ColorWidth lineColor;
 
 public:
 	void drawDebugDrawerLines()
@@ -558,7 +559,7 @@ public:
 				int numPoints = m_sortedLines[index].size();
 				const unsigned int* indices = &m_sortedIndices[index][0];
 				int numIndices = m_sortedIndices[index].size();
-				m_guiHelper->getRenderInterface()->drawLines(positions, cw.m_color.m_floats, numPoints, stride, indices, numIndices, cw.width);
+				m_guiHelper->getRenderInterface()->drawLinesC(positions, cw.m_color.m_floats, lineColor.m_color.m_floats, numPoints, stride, indices, numIndices, cw.width);
 			}
 		}
 	}
@@ -604,9 +605,10 @@ public:
 		}
 	}
 
-	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color)
+	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color, const btVector4& colorLine)
 	{
 		{
+			colorLine.serializeFloat(lineColor.m_color);
 			ColorWidth cw;
 			color.serializeFloat(cw.m_color);
 			cw.width = 1;
