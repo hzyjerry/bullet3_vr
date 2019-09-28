@@ -1878,7 +1878,7 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 {
 	int physicsClientId = 0;
 
-	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "physicsClientId", "rgbaColor", "rgbaLineColor", NULL};
+	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorId", "anchors", "collisionMargin", "rgbaColor", "rgbaLineColor", "physicsClientId", NULL};
 
 	int bodyUniqueId = -1;
 	const char* fileName = "";
@@ -1901,7 +1901,7 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 
 	b3PhysicsClientHandle sm = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdiOO", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &physicsClientId, &rgbaColorObj, &rgbaLineColorObj))
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiOdOOi", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorId, &anchorsObj, &collisionMargin, &rgbaColorObj, &rgbaLineColorObj, &physicsClientId))
 	{
 		return NULL;
 	}
