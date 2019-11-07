@@ -1,6 +1,21 @@
 [![Travis Build Status](https://api.travis-ci.org/bulletphysics/bullet3.png?branch=master)](https://travis-ci.org/bulletphysics/bullet3)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/6sly9uxajr6xsstq)](https://ci.appveyor.com/project/erwincoumans/bullet3)
 
+# Soft Body and Cloth functions for PyBullet
+Install: `pip3 install -e .`
+
+## Mesh Convex Decomposition for collisions between concave objects
+If the 3D model (.obj) is exported from Meshmixer (for vertex reduction): load the .obj in Blender and export as another .obj. VHACD does not appear to work on Meshmixer generated objs.
+```
+cd bullet3/build3
+./premake4_osx gmake
+cd gmake
+make test_vhacd
+../../bin/test_vhacd_gmake_x64_release
+testVHACD.exe --input bunny.obj --output bunny_vhacd.obj --resolution 10000000 # Windows
+bin/test_vhacd_gmake_x64_release --input bunny.obj --output bunny_vhacd.obj --resolution 10000000 # Unix
+```
+
 # Bullet Physics SDK
 
 This is the official C++ source code repository of the Bullet Physics SDK: real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc.

@@ -39,6 +39,10 @@ enum EnumSharedMemoryClientCommand
 	CMD_LOAD_BULLET,
 	CMD_SAVE_BULLET,
 	CMD_LOAD_MJCF,
+	CMD_LOAD_CLOTH,
+	CMD_CLOTH_PARAMS,
+    CMD_GET_SOFTBODY_DATA,
+	CMD_LOAD_CLOTH_PATCH,
 	CMD_LOAD_SOFT_BODY,
 	CMD_SEND_BULLET_DATA_STREAM,
 	CMD_CREATE_BOX_COLLISION_SHAPE,
@@ -146,6 +150,8 @@ enum EnumSharedMemoryServerStatus
 	CMD_RESET_SIMULATION_COMPLETED,
 	CMD_CAMERA_IMAGE_COMPLETED,
 	CMD_CAMERA_IMAGE_FAILED,
+	CMD_SOFTBODY_DATA_FAILED,
+	CMD_SOFTBODY_DATA_COMPLETED,
 	CMD_BODY_INFO_COMPLETED,
 	CMD_BODY_INFO_FAILED,
 	CMD_INVALID_STATUS,
@@ -432,6 +438,21 @@ struct b3MeshData
 {
 	int m_numVertices;
 	struct b3MeshVertex* m_vertices;
+};
+
+struct b3SoftBodyData
+{
+	int m_numNodes;
+	const float* m_x; // m_numNodes floats
+	const float* m_y; // m_numNodes floats
+	const float* m_z; // m_numNodes floats
+	int m_numContacts;
+    const float* m_contact_pos_x;
+    const float* m_contact_pos_y;
+    const float* m_contact_pos_z;
+    const float* m_contact_force_x;
+    const float* m_contact_force_y;
+    const float* m_contact_force_z;
 };
 
 struct b3OpenGLVisualizerCameraInfo
@@ -946,6 +967,7 @@ struct b3PhysicsSimulationParameters
 	double m_deltaTime;
 	double m_simulationTimestamp;  // user logging timestamp of simulation.
 	double m_gravityAcceleration[3];
+	int m_body;
 	int m_numSimulationSubSteps;
 	int m_numSolverIterations;
 	double m_warmStartingFactor;

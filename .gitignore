@@ -3,6 +3,8 @@
 /build3/vs2010
 /build_cmake/
 
+examples/pybullet/gym/*.so
+
 *.pyc
 
 # Python
