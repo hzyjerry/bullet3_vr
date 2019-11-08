@@ -1154,17 +1154,17 @@ void b3RobotSimulatorClientAPI_NoDirect::submitProfileTiming(const std::string& 
 	b3SubmitClientCommandAndWaitStatus(m_data->m_physicsClientHandle, commandHandle);
 }
 
-void b3RobotSimulatorClientAPI_NoDirect::loadStableCloth(const std::string& fileName, const struct b3RobotSimulatorLoadStableClothArgs& args)
-{
-	if (!isConnected())
-	{
-		b3Warning("Not connected");
-		return;
-	}
+// void b3RobotSimulatorClientAPI_NoDirect::loadStableCloth(const std::string& fileName, const struct b3RobotSimulatorLoadStableClothArgs& args)
+// {
+// 	if (!isConnected())
+// 	{
+// 		b3Warning("Not connected");
+// 		return;
+// 	}
 
-	b3SharedMemoryCommandHandle command = b3LoadStableClothCommandInit(m_data->m_physicsClientHandle, fileName.c_str(), args.m_startPosition, args.m_startOrientation, args.m_scale, args.m_mass, args.m_collisionMargin, args.m_bodyAnchorId, args.m_anchors);
-	b3SubmitClientCommandAndWaitStatus(m_data->m_physicsClientHandle, command);
-}
+// 	b3SharedMemoryCommandHandle command = b3LoadStableClothCommandInit(m_data->m_physicsClientHandle, fileName.c_str(), args.m_startPosition, args.m_startOrientation, args.m_scale, args.m_mass, args.m_collisionMargin, args.m_bodyAnchorId, args.m_anchors);
+// 	b3SubmitClientCommandAndWaitStatus(m_data->m_physicsClientHandle, command);
+// }
 
 void b3RobotSimulatorClientAPI_NoDirect::loadSoftBody(const std::string& fileName, const struct b3RobotSimulatorLoadSoftBodyArgs& args)
 {

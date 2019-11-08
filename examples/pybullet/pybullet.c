@@ -12388,6 +12388,8 @@ static PyMethodDef SpamMethods[] = {
 	 "Get soft body nodes."},
 	{"loadClothPatch", (PyCFunction)pybullet_loadClothPatch, METH_VARARGS | METH_KEYWORDS,
 	 "Load cloth patch."},
+	{"loadStableCloth", (PyCFunction)pybullet_loadStableCloth, METH_VARARGS | METH_KEYWORDS,
+	 "Load stable cloth from an obj file."},
 	{"loadSoftBody", (PyCFunction)pybullet_loadSoftBody, METH_VARARGS | METH_KEYWORDS,
 	 "Load a softbody from an obj file."},
 #endif

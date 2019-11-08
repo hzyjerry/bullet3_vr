@@ -8390,7 +8390,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
         out_sim_type = out_type;
         out_found_sim_filename = out_found_filename;
     }
-    
+   
     if (out_sim_type == UrdfGeometry::FILE_OBJ)
     {
 	    std::vector<tinyobj::shape_t> shapes;
@@ -8415,6 +8415,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
 	            psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->m_dynamicsWorld->getWorldInfo(), &vertices[0], &indices[0], numTris);
 	        }
 	    }
+
 #ifndef SKIP_DEFORMABLE_BODY
         btScalar spring_elastic_stiffness, spring_damping_stiffness;
 	    if (clientCmd.m_updateFlags & LOAD_SOFT_BODY_ADD_MASS_SPRING_FORCE)
@@ -8495,7 +8496,6 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
         {
                 use_bending_spring = loadStableClothArgs.m_useBendingSprings;
         }
-
         // ???????????????
         //btSoftBody::Material* pm = psb->appendMaterial();
         //pm->m_flags -= btSoftBody::fMaterial::DebugDraw;
@@ -8520,7 +8520,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
         psb->setSelfCollision(use_self_collision);
 #else
 	    // btSoftBody::Material* pm = psb->appendMaterial();
-	    //pm->m_kLST = 0.5;
+	    // pm->m_kLST = 0.5;
 	    // pm->m_flags -= btSoftBody::fMaterial::DebugDraw;
 	    // psb->generateBendingConstraints(2, pm);
 	    psb->m_cfg.piterations = 20;
@@ -8530,7 +8530,6 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
 	    psb->randomizeConstraints();
 	    psb->setTotalMass(mass, true);
 #endif
-	    
 	    psb->scale(btVector3(scale, scale, scale));
 	    psb->rotate(initialOrn);
 	    psb->translate(initialPos);
@@ -8543,12 +8542,14 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
         bool disableCollisionBetweenLinkedBodies = true;
         btScalar influence = 1;
         for (int i = 0; i < 25; i++) {
+        	printf("i");
+        	printf ("m_anchors: %d \n", loadStableClothArgs.m_anchors[i]);
             if (loadStableClothArgs.m_anchors[i] < 0) {
                 break;
             }
             psb->appendAnchor(loadStableClothArgs.m_anchors[i], bodyRigid, disableCollisionBetweenLinkedBodies, influence);
         }
-	
+		printf("here9");
 	    m_data->m_dynamicsWorld->addSoftBody(psb);
 	    m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
 	    m_data->m_guiHelper->autogenerateGraphicsObjects(this->m_data->m_dynamicsWorld);
@@ -8586,7 +8587,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
 	    visualShape.m_openglTextureId = -1;
 
 	    m_data->m_pluginManager.getRenderInterface()->addVisualShape(&visualShape, fileIO);
-
+	    printf("here10");
 	    serverStatusOut.m_loadSoftBodyResultArguments.m_objectUniqueId = bodyUniqueId;
 	    serverStatusOut.m_type = CMD_LOAD_SOFT_BODY_COMPLETED;
 		int pos = strlen(relativeFileName)-1;
@@ -8608,7 +8609,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
 	    serverStatusOut.m_dataStreamArguments.m_bodyUniqueId = bodyUniqueId;
 	    InternalBodyData* body = m_data->m_bodyHandles.getHandle(bodyUniqueId);
 	    strcpy(serverStatusOut.m_dataStreamArguments.m_bodyName, body->m_bodyName.c_str());
-
+	    printf("here11");
 	    b3Notification notification;
 	    notification.m_notificationType = BODY_ADDED;
 	    notification.m_bodyArgs.m_bodyUniqueId = bodyUniqueId;
@@ -8616,6 +8617,7 @@ bool PhysicsServerCommandProcessor::processLoadStableClothCommand(const struct S
 	}
 	}
 #endif
+	printf("here12");
 	return hasStatus;
 }
 
@@ -8692,9 +8694,6 @@ bool PhysicsServerCommandProcessor::processLoadSoftBodyCommand(const struct Shar
 
     bool render_mesh_is_sim_mesh = true;
 
-    printf("difference");
-    printf(relativeFileName);
-    printf(relativeSimFileName);
 
 	bool foundFile = UrdfFindMeshFile(fileIO, pathPrefix, relativeFileName, error_message_prefix, &out_found_filename, &out_type);
     if (out_type == UrdfGeometry::FILE_OBJ)
@@ -8804,6 +8803,7 @@ bool PhysicsServerCommandProcessor::processLoadSoftBodyCommand(const struct Shar
         btScalar friction_coeff = 0;
         if (clientCmd.m_updateFlags & LOAD_SOFT_BODY_SET_FRICTION_COEFFICIENT)
         {
+        	printf("LOAD_SOFT_BODY_SET_FRICTION_COEFFICIENT");
                 friction_coeff = loadSoftBodyArgs.m_frictionCoeff;
         }
         psb->m_cfg.kDF = friction_coeff;
@@ -8811,6 +8811,7 @@ bool PhysicsServerCommandProcessor::processLoadSoftBodyCommand(const struct Shar
         bool use_bending_spring = true;
         if (clientCmd.m_updateFlags & LOAD_SOFT_BODY_ADD_BENDING_SPRINGS)
         {
+        	printf("LOAD_SOFT_BODY_ADD_BENDING_SPRINGS");
                 use_bending_spring = loadSoftBodyArgs.m_useBendingSprings;
         }
         btSoftBody::Material* pm = psb->appendMaterial();
@@ -13260,6 +13261,11 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
 		case CMD_LOAD_CLOTH_PATCH:
 		{
 			hasStatus = processLoadClothPatchCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
+			break;
+		}
+		case CMD_LOAD_STABLE_CLOTH:
+		{
+			hasStatus = processLoadStableClothCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
 			break;
 		}
 		case CMD_LOAD_SOFT_BODY:

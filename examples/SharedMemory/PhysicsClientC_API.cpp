@@ -340,16 +340,16 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadStableClothCommandInit(b3Physics
 
         command->m_loadStableClothArguments.m_scale = scale;
         command->m_loadStableClothArguments.m_mass = mass;
-        command->m_loadClothArguments.m_collisionMargin = collisionMargin;
+        command->m_loadStableClothArguments.m_collisionMargin = collisionMargin;
         command->m_loadStableClothArguments.m_bodyAnchorId = bodyAnchorId;
         int i = 0;
         for (i = 0; i < 25; i++) {
             if (anchors[i] < 0) {
                 break;
             }
-            command->m_loadClothArguments.m_anchors[i] = anchors[i];
+            command->m_loadStableClothArguments.m_anchors[i] = anchors[i];
         }
-        command->m_loadClothArguments.m_anchors[i] = -1;
+        command->m_loadStableClothArguments.m_anchors[i] = -1;
 
 		return (b3SharedMemoryCommandHandle)command;
 	}

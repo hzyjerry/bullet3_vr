@@ -52,62 +52,62 @@ struct b3RobotSimulatorLoadSdfFileArgs
 	}
 };
 
-struct b3RobotSimulatorLoadStableClothArgs
-{
-	btVector3 m_startPosition;
-	btQuaternion m_startOrientation;
-	double m_scale;
-	double m_mass;
-	double m_collisionMargin;
-	int m_bodyAnchorId;
-	int* m_anchors;
+// struct b3RobotSimulatorLoadStableClothArgs
+// {
+// 	btVector3 m_startPosition;
+// 	btQuaternion m_startOrientation;
+// 	double m_scale;
+// 	double m_mass;
+// 	double m_collisionMargin;
+// 	int m_bodyAnchorId;
+// 	int* m_anchors;
 
-	b3RobotSimulatorLoadStableClothArgs(const btVector3 &startPos, const btQuaternion &startOrn, const double &scale, const double &mass, const double &collisionMargin, int bodyAnchorId, const int* anchors)
-		: m_startPosition(startPos),
-		  m_startOrientation(startOrn),
-		  m_scale(scale),
-		  m_mass(mass),
-		  m_collisionMargin(collisionMargin),
-		  m_bodyAnchorId(bodyAnchorId)
-	{
-		int i = 0;
-        for (i = 0; i < 25; i++) {
-            if (anchors[i] < 0) {
-                break;
-            }
-            m_anchors[i] = anchors[i];
-        }
-        m_anchors[i] = -1;
-	}
+// 	b3RobotSimulatorLoadStableClothArgs(const btVector3 &startPos, const btQuaternion &startOrn, const double &scale, const double &mass, const double &collisionMargin, int bodyAnchorId, const int* anchors)
+// 		: m_startPosition(startPos),
+// 		  m_startOrientation(startOrn),
+// 		  m_scale(scale),
+// 		  m_mass(mass),
+// 		  m_collisionMargin(collisionMargin),
+// 		  m_bodyAnchorId(bodyAnchorId)
+// 	{
+// 		int i = 0;
+//         for (i = 0; i < 25; i++) {
+//             if (anchors[i] < 0) {
+//                 break;
+//             }
+//             m_anchors[i] = anchors[i];
+//         }
+//         m_anchors[i] = -1;
+// 	}
 
-	b3RobotSimulatorLoadStableClothArgs(const btVector3 &startPos, const btQuaternion &startOrn, int bodyAnchorId, const int* anchors)
-	{
-		b3RobotSimulatorLoadStableClothArgs(startPos, startOrn, 1.0, 1.0, 0.02, bodyAnchorId, anchors);
-	}
+// 	b3RobotSimulatorLoadStableClothArgs(const btVector3 &startPos, const btQuaternion &startOrn, int bodyAnchorId, const int* anchors)
+// 	{
+// 		b3RobotSimulatorLoadStableClothArgs(startPos, startOrn, 1.0, 1.0, 0.02, bodyAnchorId, anchors);
+// 	}
 
-	b3RobotSimulatorLoadStableClothArgs(int bodyAnchorId, const int* anchors)
-	{
-		b3RobotSimulatorLoadStableClothArgs(btVector3(0, 0, 0), btQuaternion(0, 0, 0, 1), bodyAnchorId, anchors);
-	}
+// 	b3RobotSimulatorLoadStableClothArgs(int bodyAnchorId, const int* anchors)
+// 	{
+// 		b3RobotSimulatorLoadStableClothArgs(btVector3(0, 0, 0), btQuaternion(0, 0, 0, 1), bodyAnchorId, anchors);
+// 	}
 
-	b3RobotSimulatorLoadStableClothArgs(double scale, double mass, double collisionMargin, int bodyAnchorId, const int* anchors)
-		: m_startPosition(btVector3(0, 0, 0)),
-		  m_startOrientation(btQuaternion(0, 0, 0, 1)),
-		  m_scale(scale),
-		  m_mass(mass),
-		  m_collisionMargin(collisionMargin),
-		  m_bodyAnchorId(bodyAnchorId)
-	{
-		int i = 0;
-        for (i = 0; i < 25; i++) {
-            if (anchors[i] < 0) {
-                break;
-            }
-            m_anchors[i] = anchors[i];
-        }
-        m_anchors[i] = -1;
-	}
-};
+// 	b3RobotSimulatorLoadStableClothArgs(double scale, double mass, double collisionMargin, int bodyAnchorId, const int* anchors)
+// 		: m_startPosition(btVector3(0, 0, 0)),
+// 		  m_startOrientation(btQuaternion(0, 0, 0, 1)),
+// 		  m_scale(scale),
+// 		  m_mass(mass),
+// 		  m_collisionMargin(collisionMargin),
+// 		  m_bodyAnchorId(bodyAnchorId)
+// 	{
+// 		int i = 0;
+//         for (i = 0; i < 25; i++) {
+//             if (anchors[i] < 0) {
+//                 break;
+//             }
+//             m_anchors[i] = anchors[i];
+//         }
+//         m_anchors[i] = -1;
+// 	}
+// };
 
 
 struct b3RobotSimulatorLoadSoftBodyArgs
