@@ -55,7 +55,7 @@ void testSharedMemory(b3PhysicsClientHandle sm)
 		{
 			b3SharedMemoryCommandHandle command = b3InitPhysicsParamCommand(sm);
 			b3SharedMemoryStatusHandle statusHandle;
-			ret = b3PhysicsParamSetGravity(command, gravx, gravy, gravz);
+			ret = b3PhysicsParamSetGravity(command, gravx, gravy, gravz, bodyIndex);
 			ret = b3PhysicsParamSetTimeStep(command, timeStep);
 			statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
 			ASSERT_EQ(b3GetStatusType(statusHandle), CMD_CLIENT_COMMAND_COMPLETED);

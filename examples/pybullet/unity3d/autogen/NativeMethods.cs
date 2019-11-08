@@ -3448,7 +3448,12 @@ public static extern  void b3ApplyExternalForce(IntPtr commandHandle, int bodyUn
     [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3ApplyExternalTorque")]
 public static extern  void b3ApplyExternalTorque(IntPtr commandHandle, int bodyUniqueId, int linkId, ref double torque, int flag) ;
 
-    
+    /// Return Type: b3SharedMemoryCommandHandle->b3SharedMemoryCommandHandle__*
+    ///physClient: b3PhysicsClientHandle->b3PhysicsClientHandle__*
+    ///fileName: char*
+    [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3LoadStableClothCommandInit")]
+public static extern  System.IntPtr b3LoadStableClothCommandInit(IntPtr physClient, [System.Runtime.InteropServices.InAttribute()] [System.Runtime.InteropServices.MarshalAsAttribute(System.Runtime.InteropServices.UnmanagedType.LPStr)] string fileName) ;
+
     /// Return Type: b3SharedMemoryCommandHandle->b3SharedMemoryCommandHandle__*
     ///physClient: b3PhysicsClientHandle->b3PhysicsClientHandle__*
     ///fileName: char*

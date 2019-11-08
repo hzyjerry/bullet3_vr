@@ -307,6 +307,55 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothCommandInit(b3PhysicsClient
 	return 0;
 }
 
+//??????????
+B3_SHARED_API b3SharedMemoryCommandHandle b3LoadStableClothCommandInit(b3PhysicsClientHandle physClient, const char* fileName, const double startPos[3], const double startOrn[4], double scale, double mass, double collisionMargin, int bodyAnchorId, const int* anchors)
+{
+	PhysicsClient* cl = (PhysicsClient*)physClient;
+	b3Assert(cl);
+	b3Assert(cl->canSubmitCommand());
+
+	if (cl->canSubmitCommand())
+	{
+		struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+		b3Assert(command);
+		command->m_type = CMD_LOAD_STABLE_CLOTH;
+		int len = strlen(fileName);
+		if (len < MAX_FILENAME_LENGTH)
+		{
+			strcpy(command->m_loadSoftBodyArguments.m_fileName, fileName);
+		}
+		else
+		{
+			command->m_loadSoftBodyArguments.m_fileName[0] = 0;
+		}
+		command->m_updateFlags = LOAD_SOFT_BODY_FILE_NAME;
+
+        command->m_loadStableClothArguments.m_initialPosition[0] = startPos[0];
+		command->m_loadStableClothArguments.m_initialPosition[1] = startPos[1];
+		command->m_loadStableClothArguments.m_initialPosition[2] = startPos[2];
+		command->m_loadStableClothArguments.m_initialOrientation[0] = startOrn[0];
+		command->m_loadStableClothArguments.m_initialOrientation[1] = startOrn[1];
+		command->m_loadStableClothArguments.m_initialOrientation[2] = startOrn[2];
+		command->m_loadStableClothArguments.m_initialOrientation[3] = startOrn[3];
+
+        command->m_loadStableClothArguments.m_scale = scale;
+        command->m_loadStableClothArguments.m_mass = mass;
+        command->m_loadClothArguments.m_collisionMargin = collisionMargin;
+        command->m_loadStableClothArguments.m_bodyAnchorId = bodyAnchorId;
+        int i = 0;
+        for (i = 0; i < 25; i++) {
+            if (anchors[i] < 0) {
+                break;
+            }
+            command->m_loadClothArguments.m_anchors[i] = anchors[i];
+        }
+        command->m_loadClothArguments.m_anchors[i] = -1;
+
+		return (b3SharedMemoryCommandHandle)command;
+	}
+	return 0;
+}
+
 B3_SHARED_API b3SharedMemoryCommandHandle b3ClothParamsCommandInit(b3PhysicsClientHandle physClient, int bodyId, double kLST, double kAST, double kVST, double kVCF, double kDP, double kDG, double kLF, double kPR, double kVC, double kDF, double kMT, double kCHR, double kKHR, double kSHR, double kAHR, int viterations, int piterations, int diterations)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;
@@ -438,7 +487,6 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothPatchCommandInit(b3PhysicsC
 	return 0;
 }
 
-// Not changed
 B3_SHARED_API b3SharedMemoryCommandHandle b3LoadSoftBodyCommandInit(b3PhysicsClientHandle physClient, const char* fileName)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;
@@ -509,7 +557,7 @@ B3_SHARED_API int b3LoadSoftBodySetStartOrientation(b3SharedMemoryCommandHandle 
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_initialOrientation[0] = startOrnX;
+    command->m_loadSoftBodyArguments.m_initialOrientation[0] = startOrnX;
 	command->m_loadSoftBodyArguments.m_initialOrientation[1] = startOrnY;
 	command->m_loadSoftBodyArguments.m_initialOrientation[2] = startOrnZ;
 	command->m_loadSoftBodyArguments.m_initialOrientation[3] = startOrnW;
@@ -521,8 +569,8 @@ B3_SHARED_API int b3LoadSoftBodyAddCorotatedForce(b3SharedMemoryCommandHandle co
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_corotatedMu = corotatedMu;
-        command->m_loadSoftBodyArguments.m_corotatedLambda = corotatedLambda;
+    command->m_loadSoftBodyArguments.m_corotatedMu = corotatedMu;
+    command->m_loadSoftBodyArguments.m_corotatedLambda = corotatedLambda;
 	command->m_updateFlags |= LOAD_SOFT_BODY_ADD_COROTATED_FORCE;
 	return 0;
 }
@@ -531,9 +579,9 @@ B3_SHARED_API int b3LoadSoftBodyAddNeoHookeanForce(b3SharedMemoryCommandHandle c
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_NeoHookeanMu = NeoHookeanMu;
-        command->m_loadSoftBodyArguments.m_NeoHookeanLambda = NeoHookeanLambda;
-        command->m_loadSoftBodyArguments.m_NeoHookeanDamping = NeoHookeanDamping;
+    command->m_loadSoftBodyArguments.m_NeoHookeanMu = NeoHookeanMu;
+    command->m_loadSoftBodyArguments.m_NeoHookeanLambda = NeoHookeanLambda;
+    command->m_loadSoftBodyArguments.m_NeoHookeanDamping = NeoHookeanDamping;
 	command->m_updateFlags |= LOAD_SOFT_BODY_ADD_NEOHOOKEAN_FORCE;
 	return 0;
 }
@@ -542,8 +590,8 @@ B3_SHARED_API int b3LoadSoftBodyAddMassSpringForce(b3SharedMemoryCommandHandle c
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_springElasticStiffness = springElasticStiffness;
-        command->m_loadSoftBodyArguments.m_springDampingStiffness = springDampingStiffness;
+    command->m_loadSoftBodyArguments.m_springElasticStiffness = springElasticStiffness;
+    command->m_loadSoftBodyArguments.m_springDampingStiffness = springDampingStiffness;
 	command->m_updateFlags |= LOAD_SOFT_BODY_ADD_MASS_SPRING_FORCE;
 	return 0;
 }
@@ -569,7 +617,7 @@ B3_SHARED_API int b3LoadSoftBodySetSelfCollision(b3SharedMemoryCommandHandle com
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_useSelfCollision = useSelfCollision;
+    command->m_loadSoftBodyArguments.m_useSelfCollision = useSelfCollision;
 	command->m_updateFlags |= LOAD_SOFT_BODY_SET_SELF_COLLISION;
 	return 0;
 }
@@ -587,7 +635,7 @@ B3_SHARED_API int b3LoadSoftBodyUseBendingSprings(b3SharedMemoryCommandHandle co
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_LOAD_SOFT_BODY);
-        command->m_loadSoftBodyArguments.m_useBendingSprings = useBendingSprings;
+    command->m_loadSoftBodyArguments.m_useBendingSprings = useBendingSprings;
 	command->m_updateFlags |= LOAD_SOFT_BODY_ADD_BENDING_SPRINGS;
 	return 0;
 }

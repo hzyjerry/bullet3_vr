@@ -633,7 +633,7 @@ extern "C"
 	B3_SHARED_API b3SharedMemoryCommandHandle b3GetSoftBodyDataCommand(b3PhysicsClientHandle physClient, int bodyId);
 	B3_SHARED_API int b3GetSoftBodyData(b3SharedMemoryStatusHandle statusHandle, struct b3SoftBodyData* data);
 	B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothPatchCommandInit(b3PhysicsClientHandle physClient, int numX, int numY, const double* corner00, const double* corner10, const double* corner01, const double* corner11, double scale, double mass, const double* position, const double* orientation, const int* bodyAnchorIds, const int* anchors, double collisionMargin);
-	
+	B3_SHARED_API b3SharedMemoryCommandHandle b3LoadStableClothCommandInit(b3PhysicsClientHandle physClient, const char* fileName, const double startPos[3], const double startOrn[4], double scale, double mass, double collisionMargin, int bodyAnchorId, const int* anchors);
 	B3_SHARED_API b3SharedMemoryCommandHandle b3LoadSoftBodyCommandInit(b3PhysicsClientHandle physClient, const char* fileName);
 	B3_SHARED_API int b3LoadSoftBodySetScale(b3SharedMemoryCommandHandle commandHandle, double scale);
 	B3_SHARED_API int b3LoadSoftBodySetMass(b3SharedMemoryCommandHandle commandHandle, double mass);

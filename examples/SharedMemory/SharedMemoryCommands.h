@@ -524,6 +524,29 @@ struct LoadClothArgs
 	double m_collisionMargin;
 };
 
+struct LoadStableClothArgs
+{
+	char m_fileName[MAX_FILENAME_LENGTH];
+	double m_scale;
+	double m_mass;
+	double m_collisionMargin;
+    int m_bodyAnchorId;
+    int m_anchors[25];
+	double m_initialPosition[3];
+    double m_initialOrientation[4];
+    double m_springElasticStiffness;
+    double m_springDampingStiffness;
+    double m_corotatedMu;
+    double m_corotatedLambda;
+    bool m_useBendingSprings;
+    double m_collisionHardness;
+    double m_useSelfCollision;
+    double m_frictionCoeff;
+    double m_NeoHookeanMu;
+    double m_NeoHookeanLambda;
+    double m_NeoHookeanDamping;
+};
+
 struct ClothParamsArgs
 {
     int m_bodyId;
@@ -594,18 +617,18 @@ struct LoadSoftBodyArgs
 	double m_mass;
 	double m_collisionMargin;
 	double m_initialPosition[3];
-        double m_initialOrientation[4];
-        double m_springElasticStiffness;
-        double m_springDampingStiffness;
-        double m_corotatedMu;
-        double m_corotatedLambda;
-        bool m_useBendingSprings;
-        double m_collisionHardness;
-        double m_useSelfCollision;
-        double m_frictionCoeff;
-        double m_NeoHookeanMu;
-        double m_NeoHookeanLambda;
-        double m_NeoHookeanDamping;
+    double m_initialOrientation[4];
+    double m_springElasticStiffness;
+    double m_springDampingStiffness;
+    double m_corotatedMu;
+    double m_corotatedLambda;
+    bool m_useBendingSprings;
+    double m_collisionHardness;
+    double m_useSelfCollision;
+    double m_frictionCoeff;
+    double m_NeoHookeanMu;
+    double m_NeoHookeanLambda;
+    double m_NeoHookeanDamping;
 };
 
 struct b3LoadSoftBodyResultArgs
@@ -1232,6 +1255,7 @@ struct SharedMemoryCommand
 		struct UserDebugDrawArgs m_userDebugDrawArgs;
 		struct RequestRaycastIntersections m_requestRaycastIntersections;
 		struct LoadClothArgs m_loadClothArguments;
+		struct LoadStableClothArgs m_loadStableClothArguments;
 		struct ClothParamsArgs m_clothParamsArguments;
 		struct SoftBodyDataArgs m_softBodyDataArguments;
 		struct LoadClothPatchArgs m_loadClothPatchArguments;

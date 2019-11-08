@@ -1956,6 +1956,7 @@ static PyObject* pybullet_loadSDF(PyObject* self, PyObject* args, PyObject* keyw
 }
 
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
+
 // Load cloth from an obj file
 static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* keywds)
 {
@@ -2354,6 +2355,90 @@ static PyObject* pybullet_loadClothPatch(PyObject* self, PyObject* args, PyObjec
     bodyUniqueId = b3GetStatusBodyIndex(statusHandle);
 	return PyLong_FromLong(bodyUniqueId);
 }
+
+// Load cloth from an obj file
+static PyObject* pybullet_loadStableCloth(PyObject* self, PyObject* args, PyObject* keywds)
+{
+	int physicsClientId = 0;
+	static char* kwlist[] = {"fileName", "basePosition", "baseOrientation", "scale", "mass", "collisionMargin", "bodyAnchorId", "anchors", "physicsClientId", NULL};
+
+	int bodyUniqueId = -1;
+	const char* fileName = "";
+	double startPos[3] = {0.0, 0.0, 0.0};
+	double startOrn[4] = {0.0, 0.0, 0.0, 1.0};
+	PyObject* basePosObj = 0;
+	PyObject* baseOrnObj = 0;
+	double scale = 1;
+	double mass = 1;
+	double collisionMargin = 0.01;
+	int bodyAnchorId = 0;
+	PyObject* anchorsObj = 0;
+	int anchorsArray[25];
+
+	b3PhysicsClientHandle sm = 0;
+
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OOdddiOi", kwlist, &fileName, &basePosObj, &baseOrnObj, &scale, &mass, &collisionMargin, &bodyAnchorId, &anchorsObj, &physicsClientId))
+	{
+		return NULL;
+	}
+	else
+	{
+		if (basePosObj)
+		{
+			if (!pybullet_internalSetVectord(basePosObj, startPos))
+			{
+				PyErr_SetString(SpamError, "Cannot convert basePosition.");
+				return NULL;
+			}
+		}
+		if (baseOrnObj)
+		{
+			if (!pybullet_internalSetVector4d(baseOrnObj, startOrn))
+			{
+				PyErr_SetString(SpamError, "Cannot convert baseOrientation.");
+				return NULL;
+			}
+		}
+	}
+
+	sm = getPhysicsClient(physicsClientId);
+	if (sm == 0)
+	{
+		PyErr_SetString(SpamError, "Not connected to physics server.");
+		return NULL;
+	}
+
+	if (anchorsObj)
+	{
+		int i = 0;
+		PyObject* anchorsSeq = PySequence_Fast(anchorsObj, "expected a position sequence");
+		int anchorsSize = PySequence_Size(anchorsObj);
+		for (i = 0; i < anchorsSize; i++)
+		{
+			anchorsArray[i] = pybullet_internalGetIntFromSequence(anchorsSeq, i);
+		}
+        anchorsArray[i] = -1;
+	}
+
+	if (strlen(fileName))
+	{
+		b3SharedMemoryStatusHandle statusHandle;
+		int statusType;
+		b3SharedMemoryCommandHandle command = b3LoadStableClothCommandInit(sm, fileName, startPos, startOrn, scale, mass, collisionMargin, bodyAnchorId, anchorsArray);
+
+		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
+		statusType = b3GetStatusType(statusHandle);
+		if (statusType != CMD_LOAD_SOFT_BODY_COMPLETED)
+		{
+			PyErr_SetString(SpamError, "Cannot load stable cloth.");
+			return NULL;
+		}
+		bodyUniqueId = b3GetStatusBodyIndex(statusHandle);
+	}
+
+	return PyLong_FromLong(bodyUniqueId);
+}
+
 
 // Load a softbody from an obj file
 static PyObject* pybullet_loadSoftBody(PyObject* self, PyObject* args, PyObject* keywds)
