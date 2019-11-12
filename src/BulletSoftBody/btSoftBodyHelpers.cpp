@@ -334,6 +334,20 @@ void btSoftBodyHelpers::Draw(btSoftBody* psb,
 		// 							col, alp);
 		// 	}
 		// }
+		if (0 != (drawflags & fDrawFlags::Faces))
+		{
+			printf("Faces btSoftBodyHelpers\n");
+			const btVector4 col = psb->getSoftBodyColor();
+			const btVector4 colLine = psb->getSoftBodyLineColor();
+			for (i = 0; i < psb->m_faces.size(); ++i)
+			{
+				const btSoftBody::Face& f = psb->m_faces[i];
+				if (0 == (f.m_material->m_flags & btSoftBody::fMaterial::DebugDraw)) continue;
+				const btVector3 x[] = {f.m_n[0]->m_x, f.m_n[1]->m_x, f.m_n[2]->m_x};
+				const btVector3 c = (x[0] + x[1] + x[2]) / 3;
+				idraw->drawTriangles(x[0], x[1], x[2], col, colLine);
+			}
+		}
 		/* Tetras	*/
 		if (0 != (drawflags & fDrawFlags::Tetras))
 		{
