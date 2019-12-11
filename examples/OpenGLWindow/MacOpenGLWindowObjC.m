@@ -1,11 +1,8 @@
 #ifndef B3_USE_GLFW
-#define __OBJC2__ 1
-#include <Foundation/NSExtensionContext.h>
 
 #include "MacOpenGLWindowObjC.h"
 
 #define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
-
 #import <Cocoa/Cocoa.h>
 #include "OpenGLInclude.h"
 

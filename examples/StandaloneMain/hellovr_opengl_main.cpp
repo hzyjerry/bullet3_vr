@@ -1738,7 +1738,19 @@ void CMainApplication::RenderStereoTargets()
 	}
 	//else
 	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		sExample->renderScene();
+		glDepthMask(false);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		sExample->physicsDebugDraw(gDebugDrawFlags);
+		glDisable(GL_BLEND);
+		glDepthMask(true);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		sExample->physicsDebugDraw(gDebugDrawFlags);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		// sExample->renderScene();
 	}
 
 	//m_app->m_instancingRenderer->renderScene();
@@ -1787,7 +1799,19 @@ void CMainApplication::RenderStereoTargets()
 	}
 	//else
 	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		sExample->renderScene();
+		glDepthMask(false);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		sExample->physicsDebugDraw(gDebugDrawFlags);
+		glDisable(GL_BLEND);
+		glDepthMask(true);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		sExample->physicsDebugDraw(gDebugDrawFlags);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		// sExample->renderScene();
 	}
 
 	//m_app->drawGrid(gridUp);
