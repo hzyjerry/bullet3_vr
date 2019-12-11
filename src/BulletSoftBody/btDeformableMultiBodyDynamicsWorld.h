@@ -96,6 +96,8 @@ public:
 
 	virtual void debugDrawWorld();
 
+    virtual void debugDraw();
+
     void setSolverCallback(btSolverCallback cb)
     {
         m_solverCallback = cb;

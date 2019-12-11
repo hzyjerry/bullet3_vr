@@ -39,7 +39,7 @@ btSoftMultiBodyDynamicsWorld::btSoftMultiBodyDynamicsWorld(
 		m_ownsSolver = true;
 	}
 
-	m_drawFlags = fDrawFlags::Std;
+	m_drawFlags = fDrawFlags::StdTriangle;
 	m_drawNodeTree = true;
 	m_drawFaceTree = false;
 	m_drawClusterTree = false;
@@ -168,6 +168,23 @@ void btSoftMultiBodyDynamicsWorld::debugDrawWorld()
 				if (m_drawFaceTree) btSoftBodyHelpers::DrawFaceTree(psb, m_debugDrawer);
 				if (m_drawClusterTree) btSoftBodyHelpers::DrawClusterTree(psb, m_debugDrawer);
 			}
+		}
+	}
+}
+
+void btSoftMultiBodyDynamicsWorld::debugDraw()
+{
+	if (getDebugDrawer())
+	{
+		getDebugDrawer()->flushLines();
+		getDebugDrawer()->clearLines();
+		int i;
+		for (i = 0; i < this->m_softBodies.size(); i++)
+		{
+			btSoftBody* psb = (btSoftBody*)this->m_softBodies[i];
+			m_debugDrawer->setDebugMode(1);
+			btSoftBodyHelpers::Draw(psb, m_debugDrawer, m_drawFlags);
+
 		}
 	}
 }

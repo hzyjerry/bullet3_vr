@@ -431,10 +431,11 @@ void btDeformableBodySolver::predictDeformableMotion(btSoftBody* psb, btScalar d
     for (i = 0, ni = psb->m_nodes.size(); i < ni; ++i)
     {
         btSoftBody::Node& n = psb->m_nodes[i];
-        btVector3 points[2] = {n.m_x, n.m_q};
-        vol = btDbvtVolume::FromPoints(points, 2);
-        vol.Expand(btVector3(psb->m_sst.radmrg, psb->m_sst.radmrg, psb->m_sst.radmrg));
-        psb->m_ndbvt.update(n.m_leaf, vol);
+        vol = btDbvtVolume::FromCR(n.m_q, psb->m_sst.radmrg);
+        psb->m_ndbvt.update(n.m_leaf,
+                       vol,
+                       n.m_v * psb->m_sst.velmrg,
+                       psb->m_sst.updmrg);
     }
 
     if (!psb->m_fdbvt.empty())
@@ -442,12 +443,15 @@ void btDeformableBodySolver::predictDeformableMotion(btSoftBody* psb, btScalar d
         for (int i = 0; i < psb->m_faces.size(); ++i)
         {
             btSoftBody::Face& f = psb->m_faces[i];
-            btVector3 points[6] = {f.m_n[0]->m_x, f.m_n[0]->m_q,
-                                   f.m_n[1]->m_x, f.m_n[1]->m_q,
-                                   f.m_n[2]->m_x, f.m_n[2]->m_q};
-            vol = btDbvtVolume::FromPoints(points, 6);
-            vol.Expand(btVector3(psb->m_sst.radmrg, psb->m_sst.radmrg, psb->m_sst.radmrg));
-            psb->m_fdbvt.update(f.m_leaf, vol);
+            const btVector3 v = (f.m_n[0]->m_v +
+                                 f.m_n[1]->m_v +
+                                 f.m_n[2]->m_v) /
+            3;
+            vol = VolumeOf(f, psb->m_sst.radmrg);
+            psb->m_fdbvt.update(f.m_leaf,
+                           vol,
+                           v * psb->m_sst.velmrg,
+                           psb->m_sst.updmrg);
         }
     }
     /* Clear contacts        */

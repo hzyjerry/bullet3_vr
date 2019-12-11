@@ -174,7 +174,7 @@ void btSoftBodyHelpers::Draw(btSoftBody* psb,
 {
 	const btScalar scl = (btScalar)0.1;
 	const btScalar nscl = scl * 5;
-	const btVector3 lcolor = btVector3(0, 0, 0);
+	const btVector3 lcolor = btVector3(1, 1, 1);
 	const btVector3 ncolor = btVector3(1, 1, 1);
 	const btVector3 ccolor = btVector3(1, 0, 0);
 	int i, j, nj;
@@ -319,19 +319,16 @@ void btSoftBodyHelpers::Draw(btSoftBody* psb,
 		/* Faces	*/
 		if (0 != (drawflags & fDrawFlags::Faces))
 		{
-			const btScalar scl = (btScalar)0.8;
-			const btScalar alp = (btScalar)1;
-			const btVector3 col(0, (btScalar)0.7, 0);
+			const btVector4 col = psb->getSoftBodyColor();
+			const btVector4 colLine = psb->getSoftBodyLineColor();
 			for (i = 0; i < psb->m_faces.size(); ++i)
 			{
 				const btSoftBody::Face& f = psb->m_faces[i];
 				if (0 == (f.m_material->m_flags & btSoftBody::fMaterial::DebugDraw)) continue;
 				const btVector3 x[] = {f.m_n[0]->m_x, f.m_n[1]->m_x, f.m_n[2]->m_x};
 				const btVector3 c = (x[0] + x[1] + x[2]) / 3;
-				idraw->drawTriangle((x[0] - c) * scl + c,
-									(x[1] - c) * scl + c,
-									(x[2] - c) * scl + c,
-									col, alp);
+				// Not sure???
+				idraw->drawTriangles(x[0], x[1], x[2], col, colLine);
 			}
 		}
 		/* Tetras	*/
@@ -1499,6 +1496,7 @@ void btSoftBodyHelpers::getBarycentricWeights(const btVector3& a, const btVector
     btScalar v6 = btScalar(1) / (vab.cross(vac).dot(vad));
     bary = btVector4(va6*v6, vb6*v6, vc6*v6, vd6*v6);
 }
+
 
 // Iterate through all render nodes to find the simulation tetrahedron that contains the render node and record the barycentric weights
 // If the node is not inside any tetrahedron, assign it to the tetrahedron in which the node has the least negative barycentric weight

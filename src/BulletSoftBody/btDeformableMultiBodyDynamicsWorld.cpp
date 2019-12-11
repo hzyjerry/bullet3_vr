@@ -392,8 +392,19 @@ void btDeformableMultiBodyDynamicsWorld::debugDrawWorld()
 			btSoftBodyHelpers::Draw(psb, getDebugDrawer(), getDrawFlags());
 		}
 	}
+}
 
-	
+void btDeformableMultiBodyDynamicsWorld::debugDraw()
+{
+    getDebugDrawer()->flushLines();
+    getDebugDrawer()->clearLines();
+    int i;
+    for (i = 0; i < getSoftBodyArray().size(); i++)
+    {
+        btSoftBody* psb = (btSoftBody*)getSoftBodyArray()[i];
+        m_debugDrawer->setDebugMode(1);
+        btSoftBodyHelpers::Draw(psb, getDebugDrawer(), getDrawFlags());
+    }
 }
 
 void btDeformableMultiBodyDynamicsWorld::applyRigidBodyGravity(btScalar timeStep)

@@ -103,6 +103,7 @@ public:
     
     virtual void predictUnconstraintMotion(btScalar timeStep);
 	virtual void debugDrawWorld();
+	// virtual void debugDraw() = 0;
 
 	virtual void debugDrawMultiBodyConstraint(btMultiBodyConstraint* constraint);
 

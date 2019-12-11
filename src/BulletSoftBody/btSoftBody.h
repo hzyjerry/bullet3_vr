@@ -288,7 +288,6 @@ public:
 		btVector3 m_normal;  // Normal
 		btScalar m_ra;       // Rest area
 		btDbvtNode* m_leaf;  // Leaf data
-        btVector4 m_pcontact; // barycentric weights of the persistent contact
         int m_index;
 	};
 	/* Tetra		*/
@@ -324,6 +323,7 @@ public:
 		btScalar m_c2;     // ima*dt
 		btScalar m_c3;     // Friction
 		btScalar m_c4;     // Hardness
+		btVector3 m_impulse;
         
         // jacobians and unit impulse responses for multibody
         btMultiBodyJacobianData jacobianData_normal;
@@ -802,7 +802,6 @@ public:
     btScalar m_sleepingThreshold;
     btScalar m_maxSpeedSquared;
     bool m_useFaceContact;
-    btAlignedObjectArray<btVector3> m_quads; // quadrature points for collision detection
     
     btAlignedObjectArray<btVector4> m_renderNodesInterpolationWeights;
     btAlignedObjectArray<btAlignedObjectArray<const btSoftBody::Node*> > m_renderNodesParents;
@@ -1122,7 +1121,7 @@ public:
 	void initializeFaceTree();
 	btVector3 evaluateCom() const;
 	bool checkDeformableContact(const btCollisionObjectWrapper* colObjWrap, const btVector3& x, btScalar margin, btSoftBody::sCti& cti, bool predict = false) const;
-    bool checkDeformableFaceContact(const btCollisionObjectWrapper* colObjWrap, Face& f, btVector3& contact_point, btVector3& bary, btScalar margin, btSoftBody::sCti& cti, bool predict = false) const;
+    bool checkDeformableFaceContact(const btCollisionObjectWrapper* colObjWrap, const Face& x, btVector3& contact_point, btVector3& bary, btScalar margin, btSoftBody::sCti& cti, bool predict = false) const;
     bool checkContact(const btCollisionObjectWrapper* colObjWrap, const btVector3& x, btScalar margin, btSoftBody::sCti& cti) const;
 	void updateNormals();
 	void updateBounds();
@@ -1144,7 +1143,6 @@ public:
 	void applyForces();
     void setMaxStress(btScalar maxStress);
     void interpolateRenderMesh();
-    void setCollisionQuadrature(int N);
 	static void PSolve_Anchors(btSoftBody* psb, btScalar kst, btScalar ti);
 	static void PSolve_RContacts(btSoftBody* psb, btScalar kst, btScalar ti);
 	static void PSolve_SContacts(btSoftBody* psb, btScalar, btScalar ti);
