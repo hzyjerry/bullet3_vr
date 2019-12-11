@@ -544,6 +544,7 @@ MultithreadedDebugDrawer : public btIDebugDraw
 	btAlignedObjectArray<btAlignedObjectArray<unsigned int> > m_sortedIndices;
 	btAlignedObjectArray<btAlignedObjectArray<btVector3FloatData> > m_sortedLines;
 	btHashMap<ColorWidth, int> m_hashedLines;
+	ColorWidth lineColor;
 
 public:
 	virtual void drawDebugDrawerLines()
@@ -559,7 +560,7 @@ public:
 				int numPoints = m_sortedLines[index].size();
 				const unsigned int* indices = &m_sortedIndices[index][0];
 				int numIndices = m_sortedIndices[index].size();
-				m_guiHelper->getRenderInterface()->drawLines(positions, cw.m_color.m_floats, numPoints, stride, indices, numIndices, cw.width);
+				m_guiHelper->getRenderInterface()->drawLinesC(positions, cw.m_color.m_floats, lineColor.m_color.m_floats, numPoints, stride, indices, numIndices, cw.width);
 			}
 		}
 	}
@@ -601,6 +602,44 @@ public:
 				m_sortedIndices[index].push_back(m_sortedLines[index].size());
 				to.serializeFloat(toX1);
 				m_sortedLines[index].push_back(toX1);
+			}
+		}
+	}
+
+	virtual void drawTriangles(const btVector3& v0, const btVector3& v1, const btVector3& v2, const btVector4& color, const btVector4& colorLine)
+	{
+		{
+			colorLine.serializeFloat(lineColor.m_color);
+			ColorWidth cw;
+			color.serializeFloat(cw.m_color);
+			cw.width = 1;
+			int index = -1;
+
+			int* indexPtr = m_hashedLines.find(cw);
+			if (indexPtr)
+			{
+				index = *indexPtr;
+			}
+			else
+			{
+				index = m_sortedLines.size();
+				m_sortedLines.expand();
+				m_sortedIndices.expand();
+				m_hashedLines.insert(cw, index);
+			}
+			btAssert(index >= 0);
+			if (index >= 0)
+			{
+				btVector3FloatData point0, point1, point2;
+				m_sortedIndices[index].push_back(m_sortedLines[index].size());
+				v0.serializeFloat(point0);
+				m_sortedLines[index].push_back(point0);
+				m_sortedIndices[index].push_back(m_sortedLines[index].size());
+				v1.serializeFloat(point1);
+				m_sortedLines[index].push_back(point1);
+				m_sortedIndices[index].push_back(m_sortedLines[index].size());
+				v2.serializeFloat(point2);
+				m_sortedLines[index].push_back(point2);
 			}
 		}
 	}
@@ -1656,30 +1695,37 @@ public:
 
 		btVector3 vrTeleportPos = m_physicsServer.getVRTeleportPosition();
 
-		if (args.GetCmdLineArgument("camPosX", vrTeleportPos[0]))
-		{
-			printf("camPosX=%f\n", vrTeleportPos[0]);
-		}
+		// if (args.GetCmdLineArgument("camPosX", vrTeleportPos[0]))
+		// {
+		// 	printf("camPosX=%f\n", vrTeleportPos[0]);
+		// }
 
-		if (args.GetCmdLineArgument("camPosY", vrTeleportPos[1]))
-		{
-			printf("camPosY=%f\n", vrTeleportPos[1]);
-		}
+		// if (args.GetCmdLineArgument("camPosY", vrTeleportPos[1]))
+		// {
+		// 	printf("camPosY=%f\n", vrTeleportPos[1]);
+		// }
 
-		if (args.GetCmdLineArgument("camPosZ", vrTeleportPos[2]))
-		{
-			printf("camPosZ=%f\n", vrTeleportPos[2]);
-		}
+		// if (args.GetCmdLineArgument("camPosZ", vrTeleportPos[2]))
+		// {
+		// 	printf("camPosZ=%f\n", vrTeleportPos[2]);
+		// }
+		printf("camPosX=%f\n", vrTeleportPos[0]);
+		printf("camPosY=%f\n", vrTeleportPos[1]);
+		printf("camPosZ=%f\n", vrTeleportPos[2]);
 
 		m_physicsServer.setVRTeleportPosition(vrTeleportPos);
 
 		float camRotZ = 0.f;
-		if (args.GetCmdLineArgument("camRotZ", camRotZ))
-		{
-			printf("camRotZ = %f\n", camRotZ);
-			btQuaternion ornZ(btVector3(0, 0, 1), camRotZ);
-			m_physicsServer.setVRTeleportOrientation(ornZ);
-		}
+		btQuaternion ornZ(btVector3(0, 0, 1), camRotZ);
+		m_physicsServer.setVRTeleportOrientation(ornZ);
+
+		btQuaternion vrTeleportOrient = m_physicsServer.getVRTeleportOrientation();
+
+		printf("camRotX=%f\n", vrTeleportOrient[0]);
+		printf("camRotY=%f\n", vrTeleportOrient[1]);
+		printf("camRotZ=%f\n", vrTeleportOrient[2]);
+		printf("camRotW=%f\n", vrTeleportOrient[3]);
+
 
 		if (args.CheckCmdLineFlag("realtimesimulation"))
 		{
@@ -2782,8 +2828,8 @@ void PhysicsServerExample::renderScene()
 		{
 			b3Transform tr;
 			tr.setIdentity();
-			btVector3 VRController2Pos = m_physicsServer.getVRTeleportPosition();
-			btQuaternion VRController2Orn = m_physicsServer.getVRTeleportOrientation();
+			btVector3 VRController2Pos = m_physicsServer.getVRTeleportPosition_init();
+			btQuaternion VRController2Orn = m_physicsServer.getVRTeleportOrientation_init();
 			tr.setOrigin(b3MakeVector3(VRController2Pos[0], VRController2Pos[1], VRController2Pos[2]));
 			tr.setRotation(b3Quaternion(VRController2Orn[0], VRController2Orn[1], VRController2Orn[2], VRController2Orn[3]));
 			tr = tr * b3Transform(b3Quaternion(0, 0, -SIMD_HALF_PI), b3MakeVector3(0, 0, 0));
@@ -2803,9 +2849,9 @@ void PhysicsServerExample::renderScene()
 	btTransform tr2a, tr2;
 	tr2a.setIdentity();
 	tr2.setIdentity();
-	tr2.setOrigin(m_physicsServer.getVRTeleportPosition());
-	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation());
-	btTransform trTotal = tr2 * tr2a;
+	tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
+	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
+	btTransform trTotal = tr2a * tr2;
 	btTransform trInv = trTotal.inverse();
 
 	btMatrix3x3 vrOffsetRot;
@@ -2976,22 +3022,22 @@ void PhysicsServerExample::vrControllerButtonCallback(int controllerId, int butt
 
 	btTransform trLocal;
 	trLocal.setIdentity();
-	trLocal.setRotation(btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI) * btQuaternion(btVector3(0, 1, 0), SIMD_HALF_PI));
+	trLocal.setRotation(btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI) * btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI));
 
 	btTransform trOrg;
 	trOrg.setIdentity();
-	trOrg.setOrigin(btVector3(pos[0], pos[1], pos[2]));
-	trOrg.setRotation(btQuaternion(orn[0], orn[1], orn[2], orn[3]));
+	trOrg.setOrigin(btVector3(0, 0, 0));
+	trOrg.setRotation(btQuaternion(0, 0, 0, 1));
 
 	btTransform tr2a;
 	tr2a.setIdentity();
 	btTransform tr2;
 	tr2.setIdentity();
 
-	tr2.setOrigin(m_physicsServer.getVRTeleportPosition());
-	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation());
+	tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
+	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
 
-	btTransform trTotal = tr2 * tr2a * trOrg * trLocal;
+	btTransform trTotal = tr2a * tr2 * trOrg * trLocal;
 
 	if (controllerId != gGraspingController)
 	{
@@ -3102,7 +3148,7 @@ void PhysicsServerExample::vrControllerMoveCallback(int controllerId, float pos[
 
 	btTransform trLocal;
 	trLocal.setIdentity();
-	trLocal.setRotation(btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI) * btQuaternion(btVector3(0, 1, 0), SIMD_HALF_PI));
+	//trLocal.setRotation(btQuaternion(btVector3(0, 0, 1), SIMD_HALF_PI) * btQuaternion(btVector3(0, 1, 0), SIMD_HALF_PI));
 
 	btTransform trOrg;
 	trOrg.setIdentity();
@@ -3114,10 +3160,10 @@ void PhysicsServerExample::vrControllerMoveCallback(int controllerId, float pos[
 	btTransform tr2;
 	tr2.setIdentity();
 
-	tr2.setOrigin(m_physicsServer.getVRTeleportPosition());
-	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation());
+	tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
+	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
 
-	btTransform trTotal = tr2 * tr2a * trOrg * trLocal;
+	btTransform trTotal = tr2a * tr2 * trOrg * trLocal;
 
 	if (controllerId == gGraspingController)
 	{
@@ -3170,9 +3216,9 @@ void PhysicsServerExample::vrHMDMoveCallback(int controllerId, float pos[4], flo
 	tr2a.setIdentity();
 	btTransform tr2;
 	tr2.setIdentity();
-	tr2.setOrigin(m_physicsServer.getVRTeleportPosition());
-	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation());
-	btTransform trTotal = tr2 * tr2a * trOrg * trLocal;
+	tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
+	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
+	btTransform trTotal = tr2a * tr2 * trOrg * trLocal;
 
 	m_args[0].m_csGUI->lock();
 	m_args[0].m_vrControllerEvents[controllerId].m_controllerId = controllerId;

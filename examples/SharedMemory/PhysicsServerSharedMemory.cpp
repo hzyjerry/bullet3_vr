@@ -313,6 +313,15 @@ const btVector3& PhysicsServerSharedMemory::getVRTeleportPosition() const
 {
 	return m_data->m_commandProcessor->getVRTeleportPosition();
 }
+const btVector3& PhysicsServerSharedMemory::getVRTeleportPosition_init() const
+{
+	return m_data->m_commandProcessor->getVRTeleportPosition_init();
+}
+
+const btVector3& PhysicsServerSharedMemory::getVRTeleportPosition_prev() const
+{
+	return m_data->m_commandProcessor->getVRTeleportPosition_prev();
+}
 void PhysicsServerSharedMemory::setVRTeleportPosition(const btVector3& vrTeleportPos)
 {
 	m_data->m_commandProcessor->setVRTeleportPosition(vrTeleportPos);
@@ -321,6 +330,15 @@ void PhysicsServerSharedMemory::setVRTeleportPosition(const btVector3& vrTelepor
 const btQuaternion& PhysicsServerSharedMemory::getVRTeleportOrientation() const
 {
 	return m_data->m_commandProcessor->getVRTeleportOrientation();
+}
+const btQuaternion& PhysicsServerSharedMemory::getVRTeleportOrientation_init() const
+{
+	return m_data->m_commandProcessor->getVRTeleportOrientation_init();
+}
+
+const btQuaternion& PhysicsServerSharedMemory::getVRTeleportOrientation_prev() const
+{
+	return m_data->m_commandProcessor->getVRTeleportOrientation_prev();
 }
 void PhysicsServerSharedMemory::setVRTeleportOrientation(const btQuaternion& vrTeleportOrn)
 {

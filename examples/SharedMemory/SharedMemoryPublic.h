@@ -7,8 +7,8 @@
 //Please don't replace an existing magic number:
 //instead, only ADD a new one at the top, comment-out previous one
 
-#define SHARED_MEMORY_MAGIC_NUMBER 201911280
-//#define SHARED_MEMORY_MAGIC_NUMBER 201911180
+
+#define SHARED_MEMORY_MAGIC_NUMBER 201911180
 //#define SHARED_MEMORY_MAGIC_NUMBER 201909030
 //#define SHARED_MEMORY_MAGIC_NUMBER 201908110
 //#define SHARED_MEMORY_MAGIC_NUMBER 201908050
@@ -41,6 +41,10 @@ enum EnumSharedMemoryClientCommand
 	CMD_LOAD_BULLET,
 	CMD_SAVE_BULLET,
 	CMD_LOAD_MJCF,
+	CMD_LOAD_CLOTH,
+	CMD_CLOTH_PARAMS,
+    CMD_GET_SOFTBODY_DATA,
+	CMD_LOAD_CLOTH_PATCH,
 	CMD_LOAD_SOFT_BODY,
 	CMD_SEND_BULLET_DATA_STREAM,
 	CMD_CREATE_BOX_COLLISION_SHAPE,
@@ -78,6 +82,7 @@ enum EnumSharedMemoryClientCommand
 	CMD_SET_SHADOW,
 	CMD_USER_DEBUG_DRAW,
 	CMD_REQUEST_VR_EVENTS_DATA,
+	CMD_REQUEST_AND_SET_VR_EVENTS_DATA,
 	CMD_SET_VR_CAMERA_STATE,
 	CMD_SYNC_BODY_INFO,
 	CMD_STATE_LOGGING,
@@ -146,6 +151,8 @@ enum EnumSharedMemoryServerStatus
 	CMD_STEP_FORWARD_SIMULATION_COMPLETED,
 	CMD_RESET_SIMULATION_COMPLETED,
 	CMD_CAMERA_IMAGE_COMPLETED,
+	CMD_SOFTBODY_DATA_FAILED,
+	CMD_SOFTBODY_DATA_COMPLETED,
 	CMD_CAMERA_IMAGE_FAILED,
 	CMD_BODY_INFO_COMPLETED,
 	CMD_BODY_INFO_FAILED,
@@ -312,7 +319,7 @@ struct b3UserDataValue
 struct b3UserConstraint
 {
 	int m_parentBodyIndex;
-	int m_parentJointIndex;
+	int m_parentJointIndices[25];
 	int m_childBodyIndex;
 	int m_childJointIndex;
 	double m_parentFrame[7];
@@ -435,6 +442,21 @@ struct b3MeshData
 	struct b3MeshVertex* m_vertices;
 };
 
+struct b3SoftBodyData
+{
+	int m_numNodes;
+	const float* m_x; // m_numNodes floats
+	const float* m_y; // m_numNodes floats
+	const float* m_z; // m_numNodes floats
+	int m_numContacts;
+    const float* m_contact_pos_x;
+    const float* m_contact_pos_y;
+    const float* m_contact_pos_z;
+    const float* m_contact_force_x;
+    const float* m_contact_force_y;
+    const float* m_contact_force_z;
+};
+
 struct b3OpenGLVisualizerCameraInfo
 {
 	int m_width;
@@ -516,6 +538,7 @@ struct b3VREventsData
 {
 	int m_numControllerEvents;
 	struct b3VRControllerEvent* m_controllerEvents;
+	int genderType;
 };
 
 struct b3KeyboardEvent
@@ -953,6 +976,7 @@ struct b3PhysicsSimulationParameters
 	double m_deltaTime;
 	double m_simulationTimestamp;  // user logging timestamp of simulation.
 	double m_gravityAcceleration[3];
+	int m_body;
 	int m_numSimulationSubSteps;
 	int m_numSolverIterations;
 	double m_warmStartingFactor;
