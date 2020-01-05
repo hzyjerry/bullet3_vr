@@ -8423,9 +8423,9 @@ bool PhysicsServerCommandProcessor::processLoadClothCommand(const struct SharedM
 				psb->setTotalMass(mass, true);
 			}
 #endif  //SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
-			psb->scale(btVector3(scale, scale, scale));
 			psb->rotate(initialOrn);
 			psb->translate(initialPos);
+			psb->scale(btVector3(scale, scale, scale));
 
 			psb->getCollisionShape()->setMargin(collisionMargin);
 			psb->getCollisionShape()->setUserPointer(psb);
