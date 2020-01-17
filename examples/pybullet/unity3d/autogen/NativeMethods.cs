@@ -2795,7 +2795,7 @@ public static extern  System.IntPtr b3CalculateInverseKinematicsCommandInit(IntP
     ///endEffectorLinkIndex: int
     ///targetPosition: double*
     [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3CalculateInverseKinematicsAddTargetPurePosition")]
-public static extern  void b3CalculateInverseKinematicsAddTargetPurePosition(IntPtr commandHandle, int endEffectorLinkIndex, ref double targetPosition) ;
+public static extern  void b3CalculateInverseKinematicsAddTargetPurePosition(IntPtr commandHandle, int endEffectorLinkIndex, int baseLinkIndex, ref double targetPosition) ;
 
     
     /// Return Type: void
@@ -2804,7 +2804,7 @@ public static extern  void b3CalculateInverseKinematicsAddTargetPurePosition(Int
     ///targetPosition: double*
     ///targetOrientation: double*
     [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3CalculateInverseKinematicsAddTargetPositionWithOrientation")]
-public static extern  void b3CalculateInverseKinematicsAddTargetPositionWithOrientation(IntPtr commandHandle, int endEffectorLinkIndex, ref double targetPosition, ref double targetOrientation) ;
+public static extern  void b3CalculateInverseKinematicsAddTargetPositionWithOrientation(IntPtr commandHandle, int endEffectorLinkIndex, int baseLinkIndex, ref double targetPosition, ref double targetOrientation) ;
 
     
     /// Return Type: void
@@ -2817,7 +2817,7 @@ public static extern  void b3CalculateInverseKinematicsAddTargetPositionWithOrie
     ///jointRange: double*
     ///restPose: double*
     [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3CalculateInverseKinematicsPosWithNullSpaceVel")]
-public static extern  void b3CalculateInverseKinematicsPosWithNullSpaceVel(IntPtr commandHandle, int numDof, int endEffectorLinkIndex, ref double targetPosition, ref double lowerLimit, ref double upperLimit, ref double jointRange, ref double restPose) ;
+public static extern  void b3CalculateInverseKinematicsPosWithNullSpaceVel(IntPtr commandHandle, int numDof, int endEffectorLinkIndex, int baseLinkIndex, ref double targetPosition, ref double lowerLimit, ref double upperLimit, ref double jointRange, ref double restPose) ;
 
     
     /// Return Type: void
@@ -2831,7 +2831,7 @@ public static extern  void b3CalculateInverseKinematicsPosWithNullSpaceVel(IntPt
     ///jointRange: double*
     ///restPose: double*
     [System.Runtime.InteropServices.DllImportAttribute(dllName, EntryPoint="b3CalculateInverseKinematicsPosOrnWithNullSpaceVel")]
-public static extern  void b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(IntPtr commandHandle, int numDof, int endEffectorLinkIndex, ref double targetPosition, ref double targetOrientation, ref double lowerLimit, ref double upperLimit, ref double jointRange, ref double restPose) ;
+public static extern  void b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(IntPtr commandHandle, int numDof, int endEffectorLinkIndex, int baseLinkIndex, ref double targetPosition, ref double targetOrientation, ref double lowerLimit, ref double upperLimit, ref double jointRange, ref double restPose) ;
 
     
     /// Return Type: void

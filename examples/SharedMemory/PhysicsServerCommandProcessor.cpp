@@ -11905,6 +11905,7 @@ bool PhysicsServerCommandProcessor::processSendPhysicsParametersCommand(const st
 				ikHelperPtr = tmpHelper;
 			}
 
+			int baseLinkIndex = clientCmd.m_calculateInverseKinematicsArguments.m_baseLinkIndex;
 			int endEffectorLinkIndex = clientCmd.m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0];
 
 			btAlignedObjectArray<double> startingPositions;
@@ -11936,7 +11937,7 @@ bool PhysicsServerCommandProcessor::processSendPhysicsParametersCommand(const st
 
 			{
 				int DofIndex = 0;
-				for (int i = 0; i < bodyHandle->m_multiBody->getNumLinks(); ++i)
+				for (int i = baseLinkIndex; i < bodyHandle->m_multiBody->getNumLinks(); ++i)
 				{
 					if (bodyHandle->m_multiBody->getLink(i).m_jointType >= 0 && bodyHandle->m_multiBody->getLink(i).m_jointType <= 2)
 					{

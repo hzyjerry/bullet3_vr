@@ -5439,13 +5439,14 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3CalculateInverseKinematicsCommandIni
 	return (b3SharedMemoryCommandHandle)command;
 }
 
-B3_SHARED_API void b3CalculateInverseKinematicsAddTargetPurePosition(b3SharedMemoryCommandHandle commandHandle, int endEffectorLinkIndex, const double targetPosition[3])
+B3_SHARED_API void b3CalculateInverseKinematicsAddTargetPurePosition(b3SharedMemoryCommandHandle commandHandle, int endEffectorLinkIndex, int baseLinkIndex, const double targetPosition[3])
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command);
 	b3Assert(command->m_type == CMD_CALCULATE_INVERSE_KINEMATICS);
 	command->m_updateFlags |= IK_HAS_TARGET_POSITION;
 	command->m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0] = endEffectorLinkIndex;
+	command->m_calculateInverseKinematicsArguments.m_baseLinkIndex = baseLinkIndex;
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[0] = targetPosition[0];
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[1] = targetPosition[1];
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[2] = targetPosition[2];
@@ -5478,13 +5479,14 @@ B3_SHARED_API void b3CalculateInverseKinematicsAddTargetsPurePosition(b3SharedMe
 	command->m_calculateInverseKinematicsArguments.m_targetOrientation[3] = 1;
 }
 
-B3_SHARED_API void b3CalculateInverseKinematicsAddTargetPositionWithOrientation(b3SharedMemoryCommandHandle commandHandle, int endEffectorLinkIndex, const double targetPosition[3], const double targetOrientation[4])
+B3_SHARED_API void b3CalculateInverseKinematicsAddTargetPositionWithOrientation(b3SharedMemoryCommandHandle commandHandle, int endEffectorLinkIndex, int baseLinkIndex, const double targetPosition[3], const double targetOrientation[4])
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command);
 	b3Assert(command->m_type == CMD_CALCULATE_INVERSE_KINEMATICS);
 	command->m_updateFlags |= IK_HAS_TARGET_POSITION + IK_HAS_TARGET_ORIENTATION;
 	command->m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0] = endEffectorLinkIndex;
+	command->m_calculateInverseKinematicsArguments.m_baseLinkIndex = baseLinkIndex;
 	command->m_calculateInverseKinematicsArguments.m_numEndEffectorLinkIndices = 1;
 
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[0] = targetPosition[0];
@@ -5497,13 +5499,14 @@ B3_SHARED_API void b3CalculateInverseKinematicsAddTargetPositionWithOrientation(
 	command->m_calculateInverseKinematicsArguments.m_targetOrientation[3] = targetOrientation[3];
 }
 
-B3_SHARED_API void b3CalculateInverseKinematicsPosWithNullSpaceVel(b3SharedMemoryCommandHandle commandHandle, int numDof, int endEffectorLinkIndex, const double targetPosition[3], const double* lowerLimit, const double* upperLimit, const double* jointRange, const double* restPose)
+B3_SHARED_API void b3CalculateInverseKinematicsPosWithNullSpaceVel(b3SharedMemoryCommandHandle commandHandle, int numDof, int endEffectorLinkIndex, int baseLinkIndex, const double targetPosition[3], const double* lowerLimit, const double* upperLimit, const double* jointRange, const double* restPose)
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command);
 	b3Assert(command->m_type == CMD_CALCULATE_INVERSE_KINEMATICS);
 	command->m_updateFlags |= IK_HAS_TARGET_POSITION + IK_HAS_NULL_SPACE_VELOCITY;
 	command->m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0] = endEffectorLinkIndex;
+	command->m_calculateInverseKinematicsArguments.m_baseLinkIndex = baseLinkIndex;
 	command->m_calculateInverseKinematicsArguments.m_numEndEffectorLinkIndices = 1;
 
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[0] = targetPosition[0];
@@ -5519,13 +5522,14 @@ B3_SHARED_API void b3CalculateInverseKinematicsPosWithNullSpaceVel(b3SharedMemor
 	}
 }
 
-B3_SHARED_API void b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(b3SharedMemoryCommandHandle commandHandle, int numDof, int endEffectorLinkIndex, const double targetPosition[3], const double targetOrientation[4], const double* lowerLimit, const double* upperLimit, const double* jointRange, const double* restPose)
+B3_SHARED_API void b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(b3SharedMemoryCommandHandle commandHandle, int numDof, int endEffectorLinkIndex, int baseLinkIndex, const double targetPosition[3], const double targetOrientation[4], const double* lowerLimit, const double* upperLimit, const double* jointRange, const double* restPose)
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command);
 	b3Assert(command->m_type == CMD_CALCULATE_INVERSE_KINEMATICS);
 	command->m_updateFlags |= IK_HAS_TARGET_POSITION + IK_HAS_TARGET_ORIENTATION + IK_HAS_NULL_SPACE_VELOCITY;
 	command->m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0] = endEffectorLinkIndex;
+	command->m_calculateInverseKinematicsArguments.m_baseLinkIndex = baseLinkIndex;
 	command->m_calculateInverseKinematicsArguments.m_numEndEffectorLinkIndices = 1;
 
 	command->m_calculateInverseKinematicsArguments.m_targetPositions[0] = targetPosition[0];

@@ -24,6 +24,8 @@ subject to the following restrictions:
 #include "BulletCollision/NarrowPhaseCollision/btGjkEpa2.h"
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
 #include <iostream>
+#include <time.h>
+
 //
 btSoftBody::btSoftBody(btSoftBodyWorldInfo* worldInfo, int node_count, const btVector3* x, const btScalar* m)
 	: m_softBodySolver(0), m_worldInfo(worldInfo)
@@ -2017,16 +2019,23 @@ void btSoftBody::solveConstraints()
 		}
 	}
 	/* Solve positions		*/
+	printf ("piterations %f\n", float(m_cfg.piterations));
 	if (m_cfg.piterations > 0)
 	{
+		clock_t t;
+  		t = clock();
 		for (int isolve = 0; isolve < m_cfg.piterations; ++isolve)
 		{
 			const btScalar ti = isolve / (btScalar)m_cfg.piterations;
-
+			// clock_t t1;
 			//b3Clock clock;
 			for (int iseq = 0; iseq < m_cfg.m_psequence.size(); ++iseq)
 			{
+				// t1 = clock();
 				getSolver(m_cfg.m_psequence[iseq])(this, 1, ti);
+				// t1 = clock() - t1;
+				// printf ("It took me %f seconds.\n", ((float)t1)/CLOCKS_PER_SEC);
+
 			}
 		}
 		const btScalar vc = m_sst.isdt * (1 - m_cfg.kDP);
@@ -2036,6 +2045,8 @@ void btSoftBody::solveConstraints()
 			n.m_v = (n.m_x - n.m_q) * vc;
 			n.m_f = btVector3(0, 0, 0);
 		}
+		t = clock() - t;
+  		printf ("It took me %f seconds.\n", ((float)t)/CLOCKS_PER_SEC);
 	}
 	/* Solve drift			*/
 	if (m_cfg.diterations > 0)
