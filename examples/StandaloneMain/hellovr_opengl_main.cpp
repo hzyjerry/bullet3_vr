@@ -715,6 +715,11 @@ bool CMainApplication::HandleInput()
 			b3Transform tr;
 			getControllerTransform(unDevice, tr);
 			float pos[3] = {tr.getOrigin()[0], tr.getOrigin()[1], tr.getOrigin()[2]};
+
+			// printf("vrHMDMoveCallbackXORIGIN=%f\n", pos[0]);
+			// printf("vrHMDMoveCallbackYORIGIN=%f\n", pos[1]);
+			// printf("vrHMDMoveCallbackZORIGIN=%f\n", pos[2]);
+
 			b3Quaternion born = tr.getRotation();
 			float orn[4] = {born[0], born[1], born[2], born[3]};
 
@@ -748,6 +753,10 @@ bool CMainApplication::HandleInput()
 				orn[1] = orn2[1];
 				orn[2] = orn2[2];
 				orn[3] = orn2[3];
+
+				// printf("vrHMDMoveCallbackX=%f\n", pos[0]);
+				// printf("vrHMDMoveCallbackY=%f\n", pos[1]);
+				// printf("vrHMDMoveCallbackZ=%f\n", pos[2]);
 				sExample->vrHMDMoveCallback(unDevice, pos, orn);
 			}
 

@@ -129,6 +129,7 @@ btVector3 gVRTeleportPos1_init(0, 0, 0);
 btQuaternion gVRTeleportOrn_init(0, 0, 0, 1);
 btVector3 gVRTeleportPos1_prev(0, 0, 0);
 btQuaternion gVRTeleportOrn_prev(0, 0, 0, 1);
+double hipbone_to_eye_height = 0.0f;
 bool startTeleport = 0;
 
 btScalar simTimeScalingFactor = 1;
@@ -5671,6 +5672,7 @@ bool PhysicsServerCommandProcessor::processRequestAndSetVREventsCommand(const st
 		b3VRControllerEvent& event = m_data->m_vrControllerEvents.m_vrEvents[i];
 		if (i == 0)
 		{
+			printf("PosZ FIRST=%f\n", event.m_pos[2]);
 			btTransform trTotal_init;
 			trTotal_init.setOrigin(btVector3(event.m_pos[0], event.m_pos[1], event.m_pos[2]));
 			trTotal_init.setRotation(btQuaternion(event.m_orn[0], event.m_orn[1], event.m_orn[2], event.m_orn[3]));
@@ -5694,32 +5696,20 @@ bool PhysicsServerCommandProcessor::processRequestAndSetVREventsCommand(const st
 
 			btTransform trTotal = tr2_transform * tr2a_transform * trTotal_init;
 
-			// printf("EventVRTeleportPosition");
-			// printf("PosX=%f\n", event.m_pos[0]);
-			// printf("PosY=%f\n", event.m_pos[1]);
-			// printf("PosZ=%f\n", event.m_pos[2]);
-
-			// printf("EventVRTeleportPosition");
-			// printf("OrientRoll=%f\n", event.m_orn[0]);
-			// printf("OrientPitch=%f\n", event.m_orn[1]);
-			// printf("OrientYaw=%f\n", event.m_orn[2]);
-			// printf("OrientYaw=%f\n", event.m_orn[3]);
-
-			// printf("OffsetVRTeleportPosition");
-			// printf("PosX=%f\n", clientCmd.m_CameraOffsetArguments.m_PosOffset[0]);
-			// printf("PosY=%f\n", clientCmd.m_CameraOffsetArguments.m_PosOffset[1]);
-			// printf("PosZ=%f\n", clientCmd.m_CameraOffsetArguments.m_PosOffset[2]);
-
 			double pos[3];
 			pos[0] = -trTotal.getOrigin()[0];
 			pos[1] = -trTotal.getOrigin()[1];
 			pos[2] = -trTotal.getOrigin()[2];
 
+			printf("PosZ SECOND=%f\n", trTotal.getOrigin()[2]);
+			hipbone_to_eye_height = trTotal.getOrigin()[2] - 0.53;
+			printf("hipbone_to_eye_height=%f\n", hipbone_to_eye_height);
+
 			if (clientCmd.m_updateFlags & VR_CAMERA_ROOT_POSITION)
 			{
 				pos[0] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[0];
 				pos[1] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[1];
-				pos[2] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[2];
+				pos[2] -= (clientCmd.m_CameraOffsetArguments.m_PosOffset[2]);
 			}
 
 			double orn[4];
