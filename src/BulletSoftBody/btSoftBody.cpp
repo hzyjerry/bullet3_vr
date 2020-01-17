@@ -2022,6 +2022,8 @@ void btSoftBody::solveConstraints()
 		for (int isolve = 0; isolve < m_cfg.piterations; ++isolve)
 		{
 			const btScalar ti = isolve / (btScalar)m_cfg.piterations;
+
+			//b3Clock clock;
 			for (int iseq = 0; iseq < m_cfg.m_psequence.size(); ++iseq)
 			{
 				getSolver(m_cfg.m_psequence[iseq])(this, 1, ti);
