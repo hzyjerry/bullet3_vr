@@ -3212,13 +3212,14 @@ void PhysicsServerExample::vrHMDMoveCallback(int controllerId, float pos[4], flo
 	trOrg.setOrigin(btVector3(pos[0], pos[1], pos[2]));
 	trOrg.setRotation(btQuaternion(orn[0], orn[1], orn[2], orn[3]));
 
-	btTransform tr2a;
-	tr2a.setIdentity();
-	btTransform tr2;
-	tr2.setIdentity();
-	tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
-	tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
-	btTransform trTotal = tr2a * tr2 * trOrg * trLocal;
+	// btTransform tr2a;
+	// tr2a.setIdentity();
+	// btTransform tr2;
+	// tr2.setIdentity();
+	// tr2.setOrigin(m_physicsServer.getVRTeleportPosition_init());
+	// tr2a.setRotation(m_physicsServer.getVRTeleportOrientation_init());
+	// btTransform trTotal = tr2a * tr2 * trOrg * trLocal;
+	btTransform trTotal = trOrg;
 
 	m_args[0].m_csGUI->lock();
 	m_args[0].m_vrControllerEvents[controllerId].m_controllerId = controllerId;

@@ -57,6 +57,7 @@ struct PhysicsClientSharedMemoryInternalData
 	btAlignedObjectArray<b3MeshVertex> m_cachedVertexPositions;
 
 	btAlignedObjectArray<b3VRControllerEvent> m_cachedVREvents;
+	double m_cachedHMDData;
 	btAlignedObjectArray<b3KeyboardEvent> m_cachedKeyboardEvents;
 	btAlignedObjectArray<b3MouseEvent> m_cachedMouseEvents;
 	btAlignedObjectArray<double> m_cachedMassMatrix;
@@ -83,7 +84,6 @@ struct PhysicsClientSharedMemoryInternalData
 	int m_sharedMemoryKey;
 	bool m_verboseOutput;
 	double m_timeOutInSeconds;
-
 	
 
 	PhysicsClientSharedMemoryInternalData()
@@ -1104,6 +1104,7 @@ const SharedMemoryStatus* PhysicsClientSharedMemory::processServerStatus()
 				{
 					m_data->m_cachedVREvents.push_back(serverCmd.m_sendVREvents.m_controllerEvents[i]);
 				}
+				m_data->m_cachedHMDData = serverCmd.m_sendVREvents.m_HMDdis;
 				break;
 			}
 
@@ -1981,6 +1982,11 @@ void PhysicsClientSharedMemory::getCachedVREvents(struct b3VREventsData* vrEvent
 {
 	vrEventsData->m_numControllerEvents = m_data->m_cachedVREvents.size();
 	vrEventsData->m_controllerEvents = vrEventsData->m_numControllerEvents ? &m_data->m_cachedVREvents[0] : 0;
+}
+
+double PhysicsClientSharedMemory::getCachedHMDData() const
+{
+	return m_data->m_cachedHMDData;
 }
 
 void PhysicsClientSharedMemory::getCachedKeyboardEvents(struct b3KeyboardEventsData* keyboardEventsData)

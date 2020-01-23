@@ -4371,6 +4371,7 @@ static PyObject* pybullet_getBaseVelocity(PyObject* self,
 		return pylist;
 	}
 }
+
 static PyObject* pybullet_getNumBodies(PyObject* self, PyObject* args, PyObject* keywds)
 {
 	int physicsClientId = 0;
@@ -7275,7 +7276,7 @@ static PyObject* pybullet_getVREvents(PyObject* self, PyObject* args, PyObject* 
 
 static PyObject* pybullet_setOriginCameraPositionAndOrientation(PyObject* self, PyObject* args, PyObject* keywds)
 {
-	printf("pybullet set origin camera position and orientation\n");
+	printf("Set origin camera position and orientation\n");
 	b3SharedMemoryCommandHandle commandHandle;
 	b3SharedMemoryStatusHandle statusHandle;
 	int statusType;
@@ -7326,8 +7327,9 @@ static PyObject* pybullet_setOriginCameraPositionAndOrientation(PyObject* self, 
 		struct b3VREventsData vrEvents;
 		PyObject* vrEventsObj;
 		int i = 0;
+		double HMDDistance = b3GetHMDData(sm);
 		b3GetVREventsData(sm, &vrEvents);
-
+		
 		vrEventsObj = PyTuple_New(vrEvents.m_numControllerEvents);
 		for (i = 0; i < vrEvents.m_numControllerEvents; i++)
 		{
@@ -7380,12 +7382,13 @@ static PyObject* pybullet_setOriginCameraPositionAndOrientation(PyObject* self, 
 
 			PyTuple_SetItem(vrEventsObj, i, vrEventObj);
 		}
-		return vrEventsObj;
+		return PyFloat_FromDouble(HMDDistance);
 	}
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
 
 static PyObject* pybullet_getDebugVisualizerCamera(PyObject* self, PyObject* args, PyObject* keywds)
 {
@@ -11502,7 +11505,6 @@ static PyObject* pybullet_calculateInverseKinematics(PyObject* self,
 {
 	int bodyUniqueId;
 	int endEffectorLinkIndex;
-	int baseLinkIndex;
 
 	PyObject* targetPosObj = 0;
 	PyObject* targetOrnObj = 0;
@@ -11519,13 +11521,13 @@ static PyObject* pybullet_calculateInverseKinematics(PyObject* self,
 	int maxNumIterations = -1;
 	double residualThreshold = -1;
 
-	static char* kwlist[] = {"bodyUniqueId", "endEffectorLinkIndex", "baseLinkIndex", "targetPosition", "targetOrientation", "lowerLimits", "upperLimits", "jointRanges", "restPoses", "jointDamping", "solver", "currentPositions", "maxNumIterations", "residualThreshold", "physicsClientId", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "iiiO|OOOOOOiOidi", kwlist, &bodyUniqueId, &endEffectorLinkIndex, &baseLinkIndex, &targetPosObj, &targetOrnObj, &lowerLimitsObj, &upperLimitsObj, &jointRangesObj, &restPosesObj, &jointDampingObj, &solver, &currentPositionsObj, &maxNumIterations, &residualThreshold, &physicsClientId))
+	static char* kwlist[] = {"bodyUniqueId", "endEffectorLinkIndex", "targetPosition", "targetOrientation", "lowerLimits", "upperLimits", "jointRanges", "restPoses", "jointDamping", "solver", "currentPositions", "maxNumIterations", "residualThreshold", "physicsClientId", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "iiO|OOOOOOiOidi", kwlist, &bodyUniqueId, &endEffectorLinkIndex, &targetPosObj, &targetOrnObj, &lowerLimitsObj, &upperLimitsObj, &jointRangesObj, &restPosesObj, &jointDampingObj, &solver, &currentPositionsObj, &maxNumIterations, &residualThreshold, &physicsClientId))
 	{
 		//backward compatibility bodyIndex -> bodyUniqueId. don't update keywords, people need to migrate to bodyUniqueId version
-		static char* kwlist2[] = {"bodyIndex", "endEffectorLinkIndex", "baseLinkIndex", "targetPosition", "targetOrientation", "lowerLimits", "upperLimits", "jointRanges", "restPoses", "jointDamping", "physicsClientId", NULL};
+		static char* kwlist2[] = {"bodyIndex", "endEffectorLinkIndex", "targetPosition", "targetOrientation", "lowerLimits", "upperLimits", "jointRanges", "restPoses", "jointDamping", "physicsClientId", NULL};
 		PyErr_Clear();
-		if (!PyArg_ParseTupleAndKeywords(args, keywds, "iiiO|OOOOOOi", kwlist2, &bodyUniqueId, &endEffectorLinkIndex, &baseLinkIndex, &targetPosObj, &targetOrnObj, &lowerLimitsObj, &upperLimitsObj, &jointRangesObj, &restPosesObj, &jointDampingObj, &physicsClientId))
+		if (!PyArg_ParseTupleAndKeywords(args, keywds, "iiO|OOOOOOi", kwlist2, &bodyUniqueId, &endEffectorLinkIndex, &targetPosObj, &targetOrnObj, &lowerLimitsObj, &upperLimitsObj, &jointRangesObj, &restPosesObj, &jointDampingObj, &physicsClientId))
 		{
 			return NULL;
 		}
@@ -11658,22 +11660,22 @@ static PyObject* pybullet_calculateInverseKinematics(PyObject* self,
 			{
 				if (hasOrn)
 				{
-					b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(command, dofCount, endEffectorLinkIndex, baseLinkIndex, pos, ori, lowerLimits, upperLimits, jointRanges, restPoses);
+					b3CalculateInverseKinematicsPosOrnWithNullSpaceVel(command, dofCount, endEffectorLinkIndex, pos, ori, lowerLimits, upperLimits, jointRanges, restPoses);
 				}
 				else
 				{
-					b3CalculateInverseKinematicsPosWithNullSpaceVel(command, dofCount, endEffectorLinkIndex, baseLinkIndex, pos, lowerLimits, upperLimits, jointRanges, restPoses);
+					b3CalculateInverseKinematicsPosWithNullSpaceVel(command, dofCount, endEffectorLinkIndex, pos, lowerLimits, upperLimits, jointRanges, restPoses);
 				}
 			}
 			else
 			{
 				if (hasOrn)
 				{
-					b3CalculateInverseKinematicsAddTargetPositionWithOrientation(command, endEffectorLinkIndex, baseLinkIndex, pos, ori);
+					b3CalculateInverseKinematicsAddTargetPositionWithOrientation(command, endEffectorLinkIndex, pos, ori);
 				}
 				else
 				{
-					b3CalculateInverseKinematicsAddTargetPurePosition(command, endEffectorLinkIndex, baseLinkIndex, pos);
+					b3CalculateInverseKinematicsAddTargetPurePosition(command, endEffectorLinkIndex, pos);
 				}
 			}
 

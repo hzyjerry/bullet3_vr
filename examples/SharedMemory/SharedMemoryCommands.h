@@ -861,7 +861,6 @@ struct CalculateInverseKinematicsArgs
 	int m_numEndEffectorLinkIndices;
 	double m_targetOrientation[4];  //orientation represented as quaternion, x,y,z,w
 	int m_endEffectorLinkIndices[MAX_DEGREE_OF_FREEDOM];
-	int m_baseLinkIndex;
 	double m_lowerLimit[MAX_DEGREE_OF_FREEDOM];
 	double m_upperLimit[MAX_DEGREE_OF_FREEDOM];
 	double m_jointRange[MAX_DEGREE_OF_FREEDOM];
@@ -956,6 +955,7 @@ struct SendVREvents
 {
 	int m_numVRControllerEvents;
 	b3VRControllerEvent m_controllerEvents[MAX_VR_CONTROLLERS];
+	double m_HMDdis;
 };
 
 struct SendKeyboardEvents

@@ -129,7 +129,6 @@ btVector3 gVRTeleportPos1_init(0, 0, 0);
 btQuaternion gVRTeleportOrn_init(0, 0, 0, 1);
 btVector3 gVRTeleportPos1_prev(0, 0, 0);
 btQuaternion gVRTeleportOrn_prev(0, 0, 0, 1);
-double hipbone_to_eye_height = 0.0f;
 bool startTeleport = 0;
 
 btScalar simTimeScalingFactor = 1;
@@ -5656,6 +5655,7 @@ bool PhysicsServerCommandProcessor::processRequestVREventsCommand(const struct S
 			}
 		}
 	}
+	serverStatusOut.m_sendVREvents.m_HMDdis = 0.;
 	serverStatusOut.m_type = CMD_REQUEST_VR_EVENTS_DATA_COMPLETED;
 	return hasStatus;
 }
@@ -5670,45 +5670,52 @@ bool PhysicsServerCommandProcessor::processRequestAndSetVREventsCommand(const st
 	for (int i = 0; i < MAX_VR_CONTROLLERS; i++)
 	{
 		b3VRControllerEvent& event = m_data->m_vrControllerEvents.m_vrEvents[i];
+		float pos_z = event.m_pos[2];
 		if (i == 0)
 		{
 			printf("PosZ FIRST=%f\n", event.m_pos[2]);
-			btTransform trTotal_init;
-			trTotal_init.setOrigin(btVector3(event.m_pos[0], event.m_pos[1], event.m_pos[2]));
-			trTotal_init.setRotation(btQuaternion(event.m_orn[0], event.m_orn[1], event.m_orn[2], event.m_orn[3]));
+			btTransform trTotal;
+			trTotal.setOrigin(btVector3(event.m_pos[0], event.m_pos[1], event.m_pos[2]));
+			trTotal.setRotation(btQuaternion(event.m_orn[0], event.m_orn[1], event.m_orn[2], event.m_orn[3]));
 
-			btTransform tr2a_init;
-			tr2a_init.setIdentity();
-			btTransform tr2_init;
-			tr2_init.setIdentity();
-			tr2_init.setOrigin(gVRTeleportPos1_init);
-			tr2a_init.setRotation(gVRTeleportOrn_init);
+			// btTransform tr2a_init;
+			// tr2a_init.setIdentity();
+			// btTransform tr2_init;
+			// tr2_init.setIdentity();
+			// tr2_init.setOrigin(gVRTeleportPos1_init);
+			// tr2a_init.setRotation(gVRTeleportOrn_init);
 
-			btTransform tr2a;
-			tr2a.setIdentity();
-			btTransform tr2;
-			tr2.setIdentity();
-			tr2.setOrigin(gVRTeleportPos1);
-			tr2a.setRotation(gVRTeleportOrn);
+			// btTransform tr2a;
+			// tr2a.setIdentity();
+			// btTransform tr2;
+			// tr2.setIdentity();
+			// tr2.setOrigin(gVRTeleportPos1);
+			// tr2a.setRotation(gVRTeleportOrn);
 
-			btTransform tr2a_transform = tr2a * tr2a_init.inverse();
-			btTransform tr2_transform = tr2 * tr2_init.inverse();
+			// btTransform tr2a_transform = tr2a * tr2a_init.inverse();
+			// btTransform tr2_transform = tr2 * tr2_init.inverse();
 
-			btTransform trTotal = tr2_transform * tr2a_transform * trTotal_init;
+			// btTransform trTotal = tr2_transform * tr2a_transform * trTotal_init;
 
+			// double pos[3];
+			// pos[0] = -trTotal.getOrigin()[0];
+			// pos[1] = -trTotal.getOrigin()[1];
+			// pos[2] = -trTotal.getOrigin()[2];
 			double pos[3];
 			pos[0] = -trTotal.getOrigin()[0];
 			pos[1] = -trTotal.getOrigin()[1];
 			pos[2] = -trTotal.getOrigin()[2];
 
 			printf("PosZ SECOND=%f\n", trTotal.getOrigin()[2]);
-			hipbone_to_eye_height = trTotal.getOrigin()[2] - 0.53;
-			printf("hipbone_to_eye_height=%f\n", hipbone_to_eye_height);
+			double HMDdis = trTotal.getOrigin()[2];
+			printf("HMDdis=%f\n", HMDdis);
+			serverStatusOut.m_sendVREvents.m_HMDdis = trTotal.getOrigin()[2];
+			// // event.m_pos[2] = hipbone_to_eye_height;
 
 			if (clientCmd.m_updateFlags & VR_CAMERA_ROOT_POSITION)
 			{
-				pos[0] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[0];
-				pos[1] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[1];
+				// pos[0] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[0];
+				// pos[1] -= clientCmd.m_CameraOffsetArguments.m_PosOffset[1];
 				pos[2] -= (clientCmd.m_CameraOffsetArguments.m_PosOffset[2]);
 			}
 
@@ -5750,6 +5757,8 @@ bool PhysicsServerCommandProcessor::processRequestAndSetVREventsCommand(const st
 				serverStatusOut.m_sendVREvents.m_controllerEvents[serverStatusOut.m_sendVREvents.m_numVRControllerEvents++] = event;
 				event.m_numButtonEvents = 0;
 				event.m_numMoveEvents = 0;
+				// printf("changing back");
+				// event.m_pos[2] = pos_z;
 				for (int b = 0; b < MAX_VR_BUTTONS; b++)
 				{
 					event.m_buttons[b] = 0;
@@ -11905,7 +11914,6 @@ bool PhysicsServerCommandProcessor::processSendPhysicsParametersCommand(const st
 				ikHelperPtr = tmpHelper;
 			}
 
-			int baseLinkIndex = clientCmd.m_calculateInverseKinematicsArguments.m_baseLinkIndex;
 			int endEffectorLinkIndex = clientCmd.m_calculateInverseKinematicsArguments.m_endEffectorLinkIndices[0];
 
 			btAlignedObjectArray<double> startingPositions;
@@ -11937,7 +11945,7 @@ bool PhysicsServerCommandProcessor::processSendPhysicsParametersCommand(const st
 
 			{
 				int DofIndex = 0;
-				for (int i = baseLinkIndex; i < bodyHandle->m_multiBody->getNumLinks(); ++i)
+				for (int i = 0; i < bodyHandle->m_multiBody->getNumLinks(); ++i)
 				{
 					if (bodyHandle->m_multiBody->getLink(i).m_jointType >= 0 && bodyHandle->m_multiBody->getLink(i).m_jointType <= 2)
 					{

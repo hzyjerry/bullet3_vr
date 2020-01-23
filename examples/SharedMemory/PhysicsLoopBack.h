@@ -78,6 +78,8 @@ public:
 
 	virtual void getCachedMeshData(struct b3MeshData* meshData);
 
+	virtual double getCachedHMDData() const;
+
 	virtual void getCachedVREvents(struct b3VREventsData* vrEventsData);
 
 	virtual void getCachedKeyboardEvents(struct b3KeyboardEventsData* keyboardEventsData);

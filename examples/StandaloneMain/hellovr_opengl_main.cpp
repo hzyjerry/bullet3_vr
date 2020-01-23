@@ -716,10 +716,6 @@ bool CMainApplication::HandleInput()
 			getControllerTransform(unDevice, tr);
 			float pos[3] = {tr.getOrigin()[0], tr.getOrigin()[1], tr.getOrigin()[2]};
 
-			// printf("vrHMDMoveCallbackXORIGIN=%f\n", pos[0]);
-			// printf("vrHMDMoveCallbackYORIGIN=%f\n", pos[1]);
-			// printf("vrHMDMoveCallbackZORIGIN=%f\n", pos[2]);
-
 			b3Quaternion born = tr.getRotation();
 			float orn[4] = {born[0], born[1], born[2], born[3]};
 
@@ -727,6 +723,9 @@ bool CMainApplication::HandleInput()
 			//if (sPrevStates[unDevice].unPacketNum != state.unPacketNum)
 			if (m_pHMD->GetTrackedDeviceClass(unDevice) == vr::TrackedDeviceClass_HMD)
 			{
+				// printf("vrHMDMoveCallbackXORIGIN=%f\n", pos[0]);
+				// printf("vrHMDMoveCallbackYORIGIN=%f\n", pos[1]);
+				// printf("vrHMDMoveCallbackZORIGIN=%f\n", pos[2]);
 				Matrix4 rotYtoZ = rotYtoZ.identity();
 				//some Bullet apps (especially robotics related) require Z as up-axis)
 				if (m_app->getUpAxis() == 2)
@@ -738,6 +737,10 @@ bool CMainApplication::HandleInput()
 				pos[0] = mat[12];
 				pos[1] = mat[13];
 				pos[2] = mat[14];
+
+				// printf("vrHMDMoveCallbackXAFTERROT=%f\n", pos[0]);
+				// printf("vrHMDMoveCallbackYAFTERROT=%f\n", pos[1]);
+				// printf("vrHMDMoveCallbackZAFTERROT=%f\n", pos[2]);
 
 				b3Matrix3x3 bmat;
 				for (int i = 0; i < 3; i++)
@@ -753,10 +756,6 @@ bool CMainApplication::HandleInput()
 				orn[1] = orn2[1];
 				orn[2] = orn2[2];
 				orn[3] = orn2[3];
-
-				// printf("vrHMDMoveCallbackX=%f\n", pos[0]);
-				// printf("vrHMDMoveCallbackY=%f\n", pos[1]);
-				// printf("vrHMDMoveCallbackZ=%f\n", pos[2]);
 				sExample->vrHMDMoveCallback(unDevice, pos, orn);
 			}
 
