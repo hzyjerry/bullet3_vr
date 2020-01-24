@@ -24,7 +24,7 @@ public:
 
 	virtual void processClientCommands();
 
-	virtual void stepSimulationRealTime(double dtInSec, const struct b3VRControllerEvent* vrEvents, int numVREvents, const struct b3KeyboardEvent* keyEvents, int numKeyEvents, const struct b3MouseEvent* mouseEvents, int numMouseEvents);
+	virtual void stepSimulationRealTime(double dtInSec, const btVector3& vrHMDPos, const btQuaternion& vrHMDOrn, const struct b3VRControllerEvent* vrEvents, int numVREvents, const struct b3KeyboardEvent* keyEvents, int numKeyEvents, const struct b3MouseEvent* mouseEvents, int numMouseEvents);
 
 	virtual void enableRealTimeSimulation(bool enableRealTimeSim);
 	virtual bool isRealTimeSimulationEnabled() const;
@@ -40,12 +40,10 @@ public:
 
 	virtual const btVector3& getVRTeleportPosition() const;
 	virtual const btVector3& getVRTeleportPosition_init() const;
-	virtual const btVector3& getVRTeleportPosition_prev() const;
 	virtual void setVRTeleportPosition(const btVector3& vrTeleportPos);
 
 	virtual const btQuaternion& getVRTeleportOrientation() const;
 	virtual const btQuaternion& getVRTeleportOrientation_init() const;
-	virtual const btQuaternion& getVRTeleportOrientation_prev() const;
 	virtual void setVRTeleportOrientation(const btQuaternion& vrTeleportOrn);
 
 	//for physicsDebugDraw and renderScene are mainly for debugging purposes

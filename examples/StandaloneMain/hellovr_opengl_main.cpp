@@ -723,9 +723,6 @@ bool CMainApplication::HandleInput()
 			//if (sPrevStates[unDevice].unPacketNum != state.unPacketNum)
 			if (m_pHMD->GetTrackedDeviceClass(unDevice) == vr::TrackedDeviceClass_HMD)
 			{
-				// printf("vrHMDMoveCallbackXORIGIN=%f\n", pos[0]);
-				// printf("vrHMDMoveCallbackYORIGIN=%f\n", pos[1]);
-				// printf("vrHMDMoveCallbackZORIGIN=%f\n", pos[2]);
 				Matrix4 rotYtoZ = rotYtoZ.identity();
 				//some Bullet apps (especially robotics related) require Z as up-axis)
 				if (m_app->getUpAxis() == 2)
@@ -737,11 +734,6 @@ bool CMainApplication::HandleInput()
 				pos[0] = mat[12];
 				pos[1] = mat[13];
 				pos[2] = mat[14];
-
-				// printf("vrHMDMoveCallbackXAFTERROT=%f\n", pos[0]);
-				// printf("vrHMDMoveCallbackYAFTERROT=%f\n", pos[1]);
-				// printf("vrHMDMoveCallbackZAFTERROT=%f\n", pos[2]);
-
 				b3Matrix3x3 bmat;
 				for (int i = 0; i < 3; i++)
 				{
