@@ -296,6 +296,69 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothCommandInit(b3PhysicsClient
 	return 0;
 }
 
+B3_SHARED_API b3SharedMemoryCommandHandle b3LoadClothDualAnchorCommandInit(b3PhysicsClientHandle physClient, const char* fileName, double scale, double mass, const double* position, const double* orientation, int bodyAnchorIdRight, int bodyAnchorIdLeft, const int* anchorsRight, const int* anchorsLeft, double collisionMargin, const double* color, const double* colorLine)
+{
+	PhysicsClient* cl = (PhysicsClient*)physClient;
+	b3Assert(cl);
+	b3Assert(cl->canSubmitCommand());
+
+	if (cl->canSubmitCommand())
+	{
+		struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+		b3Assert(command);
+		command->m_type = CMD_LOAD_CLOTH_DUAL_ANCHOR;
+		int len = strlen(fileName);
+		if (len < MAX_FILENAME_LENGTH)
+		{
+			strcpy(command->m_loadSoftBodyArguments.m_fileName, fileName);
+		}
+		else
+		{
+			command->m_loadSoftBodyArguments.m_fileName[0] = 0;
+		}
+		command->m_updateFlags = LOAD_SOFT_BODY_FILE_NAME;
+
+        command->m_loadClothArguments.m_scale = scale;
+        command->m_loadClothArguments.m_mass = mass;
+        command->m_loadClothArguments.m_position[0] = position[0];
+        command->m_loadClothArguments.m_position[1] = position[1];
+        command->m_loadClothArguments.m_position[2] = position[2];
+        command->m_loadClothArguments.m_orientation[0] = orientation[0];
+        command->m_loadClothArguments.m_orientation[1] = orientation[1];
+        command->m_loadClothArguments.m_orientation[2] = orientation[2];
+        command->m_loadClothArguments.m_orientation[3] = orientation[3];
+		command->m_loadClothArguments.m_colorRGBA[0] = color[0];
+        command->m_loadClothArguments.m_colorRGBA[1] = color[1];
+        command->m_loadClothArguments.m_colorRGBA[2] = color[2];
+        command->m_loadClothArguments.m_colorRGBA[3] = color[3];
+		command->m_loadClothArguments.m_colorLineRGBA[0] = colorLine[0];
+        command->m_loadClothArguments.m_colorLineRGBA[1] = colorLine[1];
+        command->m_loadClothArguments.m_colorLineRGBA[2] = colorLine[2];
+        command->m_loadClothArguments.m_colorLineRGBA[3] = colorLine[3];
+        command->m_loadClothArguments.m_bodyAnchorIdRight = bodyAnchorIdRight;
+        command->m_loadClothArguments.m_bodyAnchorIdLeft = bodyAnchorIdLeft;
+        int i = 0;
+        for (i = 0; i < 25; i++) {
+            if (anchorsRight[i] < 0) {
+                break;
+            }
+            command->m_loadClothArguments.m_anchorsRight[i] = anchorsRight[i];
+        }
+        command->m_loadClothArguments.m_anchorsRight[i] = -1;
+        for (i = 0; i < 25; i++) {
+            if (anchorsLeft[i] < 0) {
+                break;
+            }
+            command->m_loadClothArguments.m_anchorsLeft[i] = anchorsLeft[i];
+        }
+        command->m_loadClothArguments.m_anchorsLeft[i] = -1;
+        command->m_loadClothArguments.m_collisionMargin = collisionMargin;
+
+		return (b3SharedMemoryCommandHandle)command;
+	}
+	return 0;
+}
+
 B3_SHARED_API b3SharedMemoryCommandHandle b3ClothParamsCommandInit(b3PhysicsClientHandle physClient, int bodyId, double kLST, double kAST, double kVST, double kVCF, double kDP, double kDG, double kLF, double kPR, double kVC, double kDF, double kMT, double kCHR, double kKHR, double kSHR, double kAHR, int viterations, int piterations, int diterations)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;

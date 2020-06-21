@@ -512,7 +512,11 @@ struct LoadClothArgs
 	double m_position[3];
 	double m_orientation[4];
     int m_bodyAnchorId;
+    int m_bodyAnchorIdRight;
+    int m_bodyAnchorIdLeft;
     int m_anchors[25];
+    int m_anchorsRight[25];
+    int m_anchorsLeft[25];
 	double m_collisionMargin;
 	double m_colorRGBA[4];
 	double m_colorLineRGBA[4];

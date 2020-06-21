@@ -1987,6 +1987,135 @@ static PyObject* pybullet_loadCloth(PyObject* self, PyObject* args, PyObject* ke
 	return PyLong_FromLong(bodyUniqueId);
 }
 
+// Load cloth from an obj file
+static PyObject* pybullet_loadClothDualAnchor(PyObject* self, PyObject* args, PyObject* keywds)
+{
+	int physicsClientId = 0;
+
+	static char* kwlist[] = {"fileName", "scale", "mass", "position", "orientation", "bodyAnchorIdRight", "bodyAnchorIdLeft", "anchorsRight", "anchorsLeft", "collisionMargin", "rgbaColor", "rgbaLineColor", "physicsClientId", NULL};
+
+	int bodyUniqueId = -1;
+	const char* fileName = "";
+	double scale = 1;
+	double mass = 1;
+	double positionArray[3] = {0, 0, 0};
+	double orientationArray[4] = {0, 0, 0, 1};
+	PyObject* positionObj = 0;
+	PyObject* orientationObj = 0;
+	int bodyAnchorIdRight = 0;
+	int bodyAnchorIdLeft = 0;
+	PyObject* anchorsRightObj = 0;
+	int anchorsRightArray[25];
+	PyObject* anchorsLeftObj = 0;
+	int anchorsLeftArray[25];
+	double collisionMargin = 0.01;
+
+	PyObject* rgbaColorObj = 0;
+	double rgbaColorArray[4] = {139. / 256., 195. / 256., 74. / 256.,0.6}; //green
+
+	PyObject* rgbaLineColorObj = 0;
+	double rgbaLineColorArray[4] = {139. / 256., 195. / 256., 74. / 256.,0.6}; //green
+
+	b3PhysicsClientHandle sm = 0;
+
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|ddOOiiOOdOOi", kwlist, &fileName, &scale, &mass, &positionObj, &orientationObj, &bodyAnchorIdRight, &bodyAnchorIdLeft, &anchorsRightObj, &anchorsLeftObj, &collisionMargin, &rgbaColorObj, &rgbaLineColorObj, &physicsClientId))
+	{
+		return NULL;
+	}
+
+	sm = getPhysicsClient(physicsClientId);
+	if (sm == 0)
+	{
+		PyErr_SetString(SpamError, "Not connected to physics server.");
+		return NULL;
+	}
+
+	if (positionObj)
+	{
+		int i = 0;
+		PyObject* positionSeq = PySequence_Fast(positionObj, "expected a position sequence");
+		int positionSize = PySequence_Size(positionObj);
+		for (i = 0; i < positionSize; i++)
+		{
+			positionArray[i] = pybullet_internalGetFloatFromSequence(positionSeq, i);
+		}
+	}
+
+	if (orientationObj)
+	{
+		int i = 0;
+		PyObject* orientationSeq = PySequence_Fast(orientationObj, "expected a position sequence");
+		int orientationSize = PySequence_Size(orientationObj);
+		for (i = 0; i < orientationSize; i++)
+		{
+			orientationArray[i] = pybullet_internalGetFloatFromSequence(orientationSeq, i);
+		}
+	}
+
+	if (anchorsRightObj)
+	{
+		int i = 0;
+		PyObject* anchorsRightSeq = PySequence_Fast(anchorsRightObj, "expected a position sequence");
+		int anchorsRightSize = PySequence_Size(anchorsRightObj);
+		for (i = 0; i < anchorsRightSize; i++)
+		{
+			anchorsRightArray[i] = pybullet_internalGetIntFromSequence(anchorsRightSeq, i);
+		}
+        anchorsRightArray[i] = -1;
+	}
+
+	if (anchorsLeftObj)
+	{
+		int i = 0;
+		PyObject* anchorsLeftSeq = PySequence_Fast(anchorsLeftObj, "expected a position sequence");
+		int anchorsLeftSize = PySequence_Size(anchorsLeftObj);
+		for (i = 0; i < anchorsLeftSize; i++)
+		{
+			anchorsLeftArray[i] = pybullet_internalGetIntFromSequence(anchorsLeftSeq, i);
+		}
+        anchorsLeftArray[i] = -1;
+	}
+
+	if (rgbaColorObj)
+	{
+		int i = 0;
+		PyObject* rgbaColorSeq = PySequence_Fast(rgbaColorObj, "expected a position sequence");
+		int rgbaColorSize = PySequence_Size(rgbaColorObj);
+		for (i = 0; i < rgbaColorSize; i++)
+		{
+			rgbaColorArray[i] = pybullet_internalGetFloatFromSequence(rgbaColorSeq, i);
+		}
+	}
+
+	if (rgbaLineColorObj)
+	{
+		int i = 0;
+		PyObject* rgbaLineColorSeq = PySequence_Fast(rgbaLineColorObj, "expected a position sequence");
+		int rgbaLineColorSize = PySequence_Size(rgbaLineColorObj);
+		for (i = 0; i < rgbaLineColorSize; i++)
+		{
+			rgbaLineColorArray[i] = pybullet_internalGetFloatFromSequence(rgbaLineColorSeq, i);
+		}
+	}
+
+	if (strlen(fileName))
+	{
+		b3SharedMemoryStatusHandle statusHandle;
+		int statusType;
+		b3SharedMemoryCommandHandle command = b3LoadClothDualAnchorCommandInit(sm, fileName, scale, mass, positionArray, orientationArray, bodyAnchorIdRight, bodyAnchorIdLeft, anchorsRightArray, anchorsLeftArray, collisionMargin, rgbaColorArray, rgbaLineColorArray);
+
+		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
+		statusType = b3GetStatusType(statusHandle);
+		if (statusType != CMD_LOAD_SOFT_BODY_COMPLETED)
+		{
+			PyErr_SetString(SpamError, "Cannot load cloth.");
+			return NULL;
+		}
+		bodyUniqueId = b3GetStatusBodyIndex(statusHandle);
+	}
+	return PyLong_FromLong(bodyUniqueId);
+}
+
 // Update cloth parameters
 static PyObject* pybullet_clothParams(PyObject* self, PyObject* args, PyObject* keywds)
 {
@@ -10763,6 +10892,8 @@ static PyMethodDef SpamMethods[] = {
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 	{"loadCloth", (PyCFunction)pybullet_loadCloth, METH_VARARGS | METH_KEYWORDS,
 	 "Load cloth from an obj file."},
+	{"loadClothDualAnchor", (PyCFunction)pybullet_loadClothDualAnchor, METH_VARARGS | METH_KEYWORDS,
+	 "Load cloth from an obj file with two anchor points (for two robot manipulators)."},
 	{"clothParams", (PyCFunction)pybullet_clothParams, METH_VARARGS | METH_KEYWORDS,
 	 "Update cloth parameters."},
 	{"getSoftBodyData", (PyCFunction)pybullet_getSoftBodyData, METH_VARARGS | METH_KEYWORDS,

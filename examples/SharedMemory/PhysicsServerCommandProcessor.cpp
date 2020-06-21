@@ -7330,7 +7330,6 @@ bool PhysicsServerCommandProcessor::processLoadClothCommand(const struct SharedM
 
             InternalBodyHandle* bodyHandleRigid = m_data->m_bodyHandles.getHandle(bodyAnchorId);
             btRigidBody* bodyRigid = bodyHandleRigid->m_rigidBody;
-            const btVector3 localPivot = btVector3(0, 0, 0);
             bool disableCollisionBetweenLinkedBodies = true;
             btScalar influence = 1;
             for (int i = 0; i < 25; i++) {
@@ -7342,6 +7341,108 @@ bool PhysicsServerCommandProcessor::processLoadClothCommand(const struct SharedM
 			psb->setSoftBodyColor(btVector4(loadClothArgs.m_colorRGBA[0], loadClothArgs.m_colorRGBA[1], loadClothArgs.m_colorRGBA[2], loadClothArgs.m_colorRGBA[3]));
             psb->setSoftBodyLineColor(btVector4(loadClothArgs.m_colorLineRGBA[0], loadClothArgs.m_colorLineRGBA[1], loadClothArgs.m_colorLineRGBA[2], loadClothArgs.m_colorLineRGBA[3]));
 			m_data->m_dynamicsWorld->addSoftBody(psb);
+            m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
+            int bodyUniqueId = m_data->m_bodyHandles.allocHandle();
+            InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(bodyUniqueId);
+            bodyHandle->m_softBody = psb;
+            serverStatusOut.m_loadSoftBodyResultArguments.m_objectUniqueId = bodyUniqueId;
+            serverStatusOut.m_type = CMD_LOAD_SOFT_BODY_COMPLETED;
+
+            // printf("cloth node 0 pos: (%f, %f, %f)\n", psb->m_nodes[0].m_x.x(), psb->m_nodes[0].m_x.y(), psb->m_nodes[0].m_x.z());
+
+            b3Notification notification;
+            notification.m_notificationType = BODY_ADDED;
+            notification.m_bodyArgs.m_bodyUniqueId = bodyUniqueId;
+            m_data->m_pluginManager.addNotification(notification);
+        }
+    }
+
+#endif
+	return hasStatus;
+}
+
+bool PhysicsServerCommandProcessor::processLoadClothDualAnchorCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes)
+{
+	serverStatusOut.m_type = CMD_LOAD_SOFT_BODY_FAILED;
+	bool hasStatus = true;
+#ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
+	const LoadClothArgs& loadClothArgs = clientCmd.m_loadClothArguments;
+
+	// double scale = 0.1;
+	// double mass = 0.1;
+	// double collisionMargin = 0.02;
+    double scale = loadClothArgs.m_scale;
+    double mass = loadClothArgs.m_mass;
+    double collisionMargin = loadClothArgs.m_collisionMargin;
+	int bodyAnchorIdRight = loadClothArgs.m_bodyAnchorIdRight;
+	int bodyAnchorIdLeft = loadClothArgs.m_bodyAnchorIdLeft;
+
+    CommonFileIOInterface* fileIO(m_data->m_pluginManager.getFileIOInterface());
+    char relativeFileName[1024];
+    char pathPrefix[1024];
+    pathPrefix[0] = 0;
+    if (fileIO->findResourcePath(loadClothArgs.m_fileName, relativeFileName, 1024))
+    {
+        b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
+    }
+    const std::string& error_message_prefix = "";
+    std::string out_found_filename;
+    int out_type;
+
+    bool foundFile = UrdfFindMeshFile(fileIO,pathPrefix, relativeFileName, error_message_prefix, &out_found_filename, &out_type);
+    std::vector<tinyobj::shape_t> shapes;
+    std::string err = tinyobj::LoadObj(shapes, out_found_filename.c_str(),"",fileIO);
+    if (shapes.size() > 0)
+    {
+        const tinyobj::shape_t& shape = shapes[0];
+        btAlignedObjectArray<btScalar> vertices;
+        btAlignedObjectArray<int> indices;
+        for (int i = 0; i < shape.mesh.positions.size(); i++)
+        {
+            vertices.push_back(shape.mesh.positions[i]);
+        }
+        for (int i = 0; i < shape.mesh.indices.size(); i++)
+        {
+            indices.push_back(shape.mesh.indices[i]);
+        }
+        int numTris = indices.size() / 3;
+        if (numTris > 0)
+        {
+            btSoftBody* psb = btSoftBodyHelpers::CreateFromTriMesh(m_data->m_dynamicsWorld->getWorldInfo(), &vertices[0], &indices[0], numTris);
+            // psb->m_cfg.piterations = 20;
+            // psb->m_cfg.kDF = 0.5;
+            // psb->randomizeConstraints();
+            psb->rotate(btQuaternion(loadClothArgs.m_orientation[0], loadClothArgs.m_orientation[1], loadClothArgs.m_orientation[2], loadClothArgs.m_orientation[3]));
+            psb->translate(btVector3(loadClothArgs.m_position[0], loadClothArgs.m_position[1], loadClothArgs.m_position[2]));
+            psb->scale(btVector3(scale, scale, scale));
+
+            psb->setTotalMass(mass, true);
+            psb->getCollisionShape()->setMargin(collisionMargin);
+            psb->getCollisionShape()->setUserPointer(psb);
+
+            bool disableCollisionBetweenLinkedBodies = true;
+            btScalar influence = 1;
+            // Setup right anchors
+            InternalBodyHandle* bodyHandleRigidRight = m_data->m_bodyHandles.getHandle(bodyAnchorIdRight);
+            btRigidBody* bodyRigidRight = bodyHandleRigidRight->m_rigidBody;
+            for (int i = 0; i < 25; i++) {
+                if (loadClothArgs.m_anchorsRight[i] < 0) {
+                    break;
+                }
+                psb->appendAnchor(loadClothArgs.m_anchorsRight[i], bodyRigidRight, disableCollisionBetweenLinkedBodies, influence);
+            }
+            // Setup left anchors
+            InternalBodyHandle* bodyHandleRigidLeft = m_data->m_bodyHandles.getHandle(bodyAnchorIdLeft);
+            btRigidBody* bodyRigidLeft = bodyHandleRigidLeft->m_rigidBody;
+            for (int i = 0; i < 25; i++) {
+                if (loadClothArgs.m_anchorsLeft[i] < 0) {
+                    break;
+                }
+                psb->appendAnchor(loadClothArgs.m_anchorsLeft[i], bodyRigidLeft, disableCollisionBetweenLinkedBodies, influence);
+            }
+            psb->setSoftBodyColor(btVector4(loadClothArgs.m_colorRGBA[0], loadClothArgs.m_colorRGBA[1], loadClothArgs.m_colorRGBA[2], loadClothArgs.m_colorRGBA[3]));
+            psb->setSoftBodyLineColor(btVector4(loadClothArgs.m_colorLineRGBA[0], loadClothArgs.m_colorLineRGBA[1], loadClothArgs.m_colorLineRGBA[2], loadClothArgs.m_colorLineRGBA[3]));
+            m_data->m_dynamicsWorld->addSoftBody(psb);
             m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
             int bodyUniqueId = m_data->m_bodyHandles.allocHandle();
             InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(bodyUniqueId);
@@ -11434,6 +11535,11 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
 		case CMD_LOAD_CLOTH:
 		{
 			hasStatus = processLoadClothCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
+			break;
+		}
+		case CMD_LOAD_CLOTH_DUAL_ANCHOR:
+		{
+			hasStatus = processLoadClothDualAnchorCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
 			break;
 		}
 		case CMD_CLOTH_PARAMS:
