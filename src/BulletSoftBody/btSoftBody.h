@@ -347,6 +347,7 @@ public:
 		btScalar m_c2;     // ima*dt
 		btScalar m_c3;     // Friction
 		btScalar m_c4;     // Hardness
+        btVector3 m_impulse;
 
 		// jacobians and unit impulse responses for multibody
 		btMultiBodyJacobianData jacobianData_normal;
@@ -366,6 +367,7 @@ public:
 		btScalar m_c3;     // Friction
 		btScalar m_c4;     // Hardness
 		btMatrix3x3 m_c5;  // inverse effective mass
+        btVector3 m_impulse;
 
 		// jacobians and unit impulse responses for multibody
 		btMultiBodyJacobianData jacobianData_normal;

@@ -126,6 +126,7 @@ btMultiBody::btMultiBody(int n_links,
 	  m_useRK4(false),
 	  m_useGlobalVelocities(false),
 	  m_internalNeedsJointFeedback(false),
+      m_gravity(-1.01, -1.01, -1.01),
 		m_kinematic_calculate_velocity(false)
 {
 	m_cachedInertiaTopLeft.setValue(0, 0, 0, 0, 0, 0, 0, 0, 0);

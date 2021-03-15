@@ -2052,6 +2052,165 @@ static PyObject* pybullet_loadSDF(PyObject* self, PyObject* args, PyObject* keyw
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
 
 
+// Update cloth parameters
+static PyObject* pybullet_clothParams(PyObject* self, PyObject* args, PyObject* keywds)
+{
+	int physicsClientId = 0;
+	int flags = 0;
+
+	static char* kwlist[] = {"bodyId",  "kLST", "kAST", "kVST", "kVCF",  "kDP",  "kDG",  "kLF",  "kPR",  "kVC",  "kDF",  "kMT",  "kCHR",  "kKHR",  "kSHR",  "kAHR",  "viterations",  "piterations",  "diterations", "physicsClientId", NULL};
+
+   int bodyId = -1;
+   double kLST = 1;
+   double kAST = 1;
+   double kVST = 1;
+   double kVCF = 1;
+   double kDP = 0;
+   double kDG = 0;
+   double kLF = 0;
+   double kPR = 0;
+   double kVC = 0;
+   double kDF = 0.2;
+   double kMT = 0;
+   double kCHR = 1.0;
+   double kKHR = 0.1;
+   double kSHR = 1.0;
+   double kAHR = 0.7;
+   int viterations = 0;
+   int piterations = 1;
+   int diterations = 0;
+   b3PhysicsClientHandle sm = 0;
+   if (!PyArg_ParseTupleAndKeywords(args, keywds, "i|dddddddddddddddiiii", kwlist, &bodyId, &kLST, &kAST, &kVST, &kVCF, &kDP, &kDG, &kLF, &kPR, &kVC, &kDF, &kMT, &kCHR, &kKHR, &kSHR, &kAHR, &viterations, &piterations, &diterations, &physicsClientId))
+   {
+   	return NULL;
+   }
+   sm = getPhysicsClient(physicsClientId);
+   if (sm == 0)
+   {
+   	PyErr_SetString(SpamError, "Not connected to physics server.");
+   	return NULL;
+   }
+   b3SharedMemoryStatusHandle statusHandle;
+   int statusType;
+   b3SharedMemoryCommandHandle command = b3ClothParamsCommandInit(sm, bodyId, kLST, kAST, kVST, kVCF, kDP, kDG, kLF, kPR, kVC, kDF, kMT, kCHR, kKHR, kSHR, kAHR, viterations, piterations, diterations);
+   statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
+	return Py_None;
+}
+
+static PyObject* pybullet_getSoftBodyData(PyObject* self, PyObject* args, PyObject* keywds)
+{
+	int physicsClientId = 0;
+
+	static char* kwlist[] = {"bodyId", "physicsClientId", NULL};
+
+    int bodyId = -1;
+
+	b3PhysicsClientHandle sm = 0;
+
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "i|i", kwlist, &bodyId, &physicsClientId))
+	{
+		return NULL;
+	}
+
+	sm = getPhysicsClient(physicsClientId);
+	if (sm == 0)
+	{
+		PyErr_SetString(SpamError, "Not connected to physics server.");
+		return NULL;
+	}
+
+	struct b3SoftBodyData data;
+	b3SharedMemoryCommandHandle command;
+
+	if (b3CanSubmitCommand(sm))
+	{
+		b3SharedMemoryStatusHandle statusHandle;
+		int statusType;
+        b3SharedMemoryCommandHandle command = b3GetSoftBodyDataCommand(sm, bodyId);
+
+		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
+		statusType = b3GetStatusType(statusHandle);
+		if (statusType == CMD_SOFTBODY_DATA_COMPLETED)
+		{
+			PyObject* pyResultList;
+            PyObject* pyX;
+            PyObject* pyY;
+            PyObject* pyZ;
+            PyObject* pyContactPosX;
+            PyObject* pyContactPosY;
+            PyObject* pyContactPosZ;
+            PyObject* pyContactForceX;
+            PyObject* pyContactForceY;
+            PyObject* pyContactForceZ;
+            pyResultList = PyTuple_New(9);
+            b3GetSoftBodyData(statusHandle, &data);
+
+#ifdef PYBULLET_USE_NUMPY
+            npy_intp dims[1] = {data.m_numNodes};
+            npy_intp dimsContact[1] = {data.m_numContacts};
+
+            pyX = PyArray_SimpleNew(1, dims, NPY_FLOAT32);
+            pyY = PyArray_SimpleNew(1, dims, NPY_FLOAT32);
+            pyZ = PyArray_SimpleNew(1, dims, NPY_FLOAT32);
+            pyContactPosX = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+            pyContactPosY = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+            pyContactPosZ = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+            pyContactForceX = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+            pyContactForceY = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+            pyContactForceZ = PyArray_SimpleNew(1, dimsContact, NPY_FLOAT32);
+
+            memcpy(PyArray_DATA(pyX), data.m_x, data.m_numNodes * sizeof(float));
+            memcpy(PyArray_DATA(pyY), data.m_y, data.m_numNodes * sizeof(float));
+            memcpy(PyArray_DATA(pyZ), data.m_z, data.m_numNodes * sizeof(float));
+            memcpy(PyArray_DATA(pyContactPosX), data.m_contact_pos_x, data.m_numContacts * sizeof(float));
+            memcpy(PyArray_DATA(pyContactPosY), data.m_contact_pos_y, data.m_numContacts * sizeof(float));
+            memcpy(PyArray_DATA(pyContactPosZ), data.m_contact_pos_z, data.m_numContacts * sizeof(float));
+            memcpy(PyArray_DATA(pyContactForceX), data.m_contact_force_x, data.m_numContacts * sizeof(float));
+            memcpy(PyArray_DATA(pyContactForceY), data.m_contact_force_y, data.m_numContacts * sizeof(float));
+            memcpy(PyArray_DATA(pyContactForceZ), data.m_contact_force_z, data.m_numContacts * sizeof(float));
+#else   //PYBULLET_USE_NUMPY
+            pyX = PyTuple_New(data.m_numNodes);
+            pyY = PyTuple_New(data.m_numNodes);
+            pyZ = PyTuple_New(data.m_numNodes);
+            pyContactPosX = PyTuple_New(data.m_numContacts);
+            pyContactPosY = PyTuple_New(data.m_numContacts);
+            pyContactPosZ = PyTuple_New(data.m_numContacts);
+            pyContactForceX = PyTuple_New(data.m_numContacts);
+            pyContactForceY = PyTuple_New(data.m_numContacts);
+            pyContactForceZ = PyTuple_New(data.m_numContacts);
+            for (int i = 0; i < data.m_numNodes; i++)
+            {
+                PyTuple_SetItem(pyX, i, PyFloat_FromDouble(data.m_x[i]));
+                PyTuple_SetItem(pyY, i, PyFloat_FromDouble(data.m_y[i]));
+                PyTuple_SetItem(pyZ, i, PyFloat_FromDouble(data.m_z[i]));
+            }
+            for (int i = 0; i < data.m_numContacts; i++)
+            {
+                PyTuple_SetItem(pyContactPosX, i, PyFloat_FromDouble(data.m_contact_pos_x[i]));
+                PyTuple_SetItem(pyContactPosY, i, PyFloat_FromDouble(data.m_contact_pos_y[i]));
+                PyTuple_SetItem(pyContactPosZ, i, PyFloat_FromDouble(data.m_contact_pos_z[i]));
+                PyTuple_SetItem(pyContactForceX, i, PyFloat_FromDouble(data.m_contact_force_x[i]));
+                PyTuple_SetItem(pyContactForceY, i, PyFloat_FromDouble(data.m_contact_force_y[i]));
+                PyTuple_SetItem(pyContactForceZ, i, PyFloat_FromDouble(data.m_contact_force_z[i]));
+            }
+#endif  //PYBULLET_USE_NUMPY
+
+			PyTuple_SetItem(pyResultList, 0, pyX);
+			PyTuple_SetItem(pyResultList, 1, pyY);
+			PyTuple_SetItem(pyResultList, 2, pyZ);
+			PyTuple_SetItem(pyResultList, 3, pyContactPosX);
+			PyTuple_SetItem(pyResultList, 4, pyContactPosY);
+			PyTuple_SetItem(pyResultList, 5, pyContactPosZ);
+			PyTuple_SetItem(pyResultList, 6, pyContactForceX);
+			PyTuple_SetItem(pyResultList, 7, pyContactForceY);
+			PyTuple_SetItem(pyResultList, 8, pyContactForceZ);
+			return pyResultList;
+		}
+	}
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 
 // Load a softbody from an obj file
@@ -3583,14 +3742,15 @@ static PyObject* pybullet_setGravity(PyObject* self, PyObject* args, PyObject* k
 		double gravX = 0.0;
 		double gravY = 0.0;
 		double gravZ = -10.0;
+        int body = -1;
 		int ret;
 		b3PhysicsClientHandle sm = 0;
 		b3SharedMemoryCommandHandle command;
 		b3SharedMemoryStatusHandle statusHandle;
 
 		int physicsClientId = 0;
-		static char* kwlist[] = {"gravX", "gravY", "gravZ", "physicsClientId", NULL};
-		if (!PyArg_ParseTupleAndKeywords(args, keywds, "ddd|i", kwlist, &gravX, &gravY, &gravZ, &physicsClientId))
+		static char* kwlist[] = {"gravX", "gravY", "gravZ", "body", "physicsClientId", NULL};
+		if (!PyArg_ParseTupleAndKeywords(args, keywds, "ddd|ii", kwlist, &gravX, &gravY, &gravZ, &body, &physicsClientId))
 		{
 			return NULL;
 		}
@@ -3603,7 +3763,7 @@ static PyObject* pybullet_setGravity(PyObject* self, PyObject* args, PyObject* k
 
 		command = b3InitPhysicsParamCommand(sm);
 
-		ret = b3PhysicsParamSetGravity(command, gravX, gravY, gravZ);
+		ret = b3PhysicsParamSetGravity(command, gravX, gravY, gravZ, body);
 		// ret = b3PhysicsParamSetTimeStep(command,  timeStep);
 		statusHandle = b3SubmitClientCommandAndWaitStatus(sm, command);
 		// ASSERT_EQ(b3GetStatusType(statusHandle), CMD_CLIENT_COMMAND_COMPLETED);
@@ -9349,19 +9509,21 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 	PyObject* linkJointAxisObj = 0;
 	PyObject* linkInertialFramePositionObj = 0;
 	PyObject* linkInertialFrameOrientationObj = 0;
+    PyObject* linkLowerLimitsObj = 0;
+ 	PyObject* linkUpperLimitsObj = 0;
 	PyObject* objBatchPositions = 0;
 
 	static char* kwlist[] = {
 		"baseMass", "baseCollisionShapeIndex", "baseVisualShapeIndex", "basePosition", "baseOrientation",
 		"baseInertialFramePosition", "baseInertialFrameOrientation", "linkMasses", "linkCollisionShapeIndices",
 		"linkVisualShapeIndices", "linkPositions", "linkOrientations", "linkInertialFramePositions", "linkInertialFrameOrientations", "linkParentIndices",
-		"linkJointTypes", "linkJointAxis", "useMaximalCoordinates", "flags", "batchPositions", "physicsClientId", NULL};
+		"linkJointTypes", "linkJointAxis", "linkLowerLimits", "linkUpperLimits", "useMaximalCoordinates", "flags", "batchPositions", "physicsClientId", NULL};
 
-	if (!PyArg_ParseTupleAndKeywords(args, keywds, "|diiOOOOOOOOOOOOOOiiOi", kwlist,
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "|diiOOOOOOOOOOOOOOOOiiOi", kwlist,
 									 &baseMass, &baseCollisionShapeIndex, &baseVisualShapeIndex, &basePosObj, &baseOrnObj,
 									 &baseInertialFramePositionObj, &baseInertialFrameOrientationObj, &linkMassesObj, &linkCollisionShapeIndicesObj,
 									 &linkVisualShapeIndicesObj, &linkPositionsObj, &linkOrientationsObj, &linkInertialFramePositionObj, &linkInertialFrameOrientationObj, &linkParentIndicesObj,
-									 &linkJointTypesObj, &linkJointAxisObj, &useMaximalCoordinates, &flags, &objBatchPositions, &physicsClientId))
+									 &linkJointTypesObj, &linkJointAxisObj, &linkLowerLimitsObj, &linkUpperLimitsObj, &useMaximalCoordinates, &flags, &objBatchPositions, &physicsClientId))
 	{
 		return NULL;
 	}
@@ -9384,6 +9546,8 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 		int numLinkJoinAxis = linkJointAxisObj ? PySequence_Size(linkJointAxisObj) : 0;
 		int numLinkInertialFramePositions = linkInertialFramePositionObj ? PySequence_Size(linkInertialFramePositionObj) : 0;
 		int numLinkInertialFrameOrientations = linkInertialFrameOrientationObj ? PySequence_Size(linkInertialFrameOrientationObj) : 0;
+        int numLinkLowerLimits = linkLowerLimitsObj ? PySequence_Size(linkLowerLimitsObj) : 0;
+ 		int numLinkUpperLimits = linkUpperLimitsObj ? PySequence_Size(linkUpperLimitsObj) : 0;
 		int numBatchPositions = objBatchPositions ? PySequence_Size(objBatchPositions) : 0;
 
 		PyObject* seqLinkMasses = linkMassesObj ? PySequence_Fast(linkMassesObj, "expected a sequence") : 0;
@@ -9397,6 +9561,8 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 		PyObject* seqLinkInertialFramePositions = linkInertialFramePositionObj ? PySequence_Fast(linkInertialFramePositionObj, "expected a sequence") : 0;
 		PyObject* seqLinkInertialFrameOrientations = linkInertialFrameOrientationObj ? PySequence_Fast(linkInertialFrameOrientationObj, "expected a sequence") : 0;
 
+        PyObject* seqLinkLowerLimits = linkLowerLimitsObj ? PySequence_Fast(linkLowerLimitsObj, "expected a sequence") : 0;
+ 		PyObject* seqLinkUpperLimits = linkUpperLimitsObj ? PySequence_Fast(linkUpperLimitsObj, "expected a sequence") : 0;
 		PyObject* seqBatchPositions = objBatchPositions ? PySequence_Fast(objBatchPositions, "expected a sequence") : 0;
 
 		if ((numLinkMasses == numLinkCollisionShapes) &&
@@ -9406,6 +9572,8 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 			(numLinkMasses == numLinkParentIndices) &&
 			(numLinkMasses == numLinkJointTypes) &&
 			(numLinkMasses == numLinkJoinAxis) &&
+            (numLinkMasses == numLinkLowerLimits) &&
+ 			(numLinkMasses == numLinkUpperLimits) &&
 			(numLinkMasses == numLinkInertialFramePositions) &&
 			(numLinkMasses == numLinkInertialFrameOrientations))
 		{
@@ -9448,6 +9616,8 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 				double linkInertialFrameOrientation[4];
 				int linkParentIndex;
 				int linkJointType;
+                double linkLowerLimit = pybullet_internalGetFloatFromSequence(seqLinkLowerLimits, i);
+ 				double linkUpperLimit = pybullet_internalGetFloatFromSequence(seqLinkUpperLimits, i);
 
 				pybullet_internalGetVector3FromSequence(seqLinkInertialFramePositions, i, linkInertialFramePosition);
 				pybullet_internalGetVector4FromSequence(seqLinkInertialFrameOrientations, i, linkInertialFrameOrientation);
@@ -9467,7 +9637,9 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 									  linkInertialFrameOrientation,
 									  linkParentIndex,
 									  linkJointType,
-									  linkJointAxis);
+									  linkJointAxis,
+                                      linkLowerLimit,
+                                      linkUpperLimit);
 			}
 
 			if (seqLinkMasses)
@@ -9486,6 +9658,10 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 				Py_DECREF(seqLinkJointTypes);
 			if (seqLinkJoinAxis)
 				Py_DECREF(seqLinkJoinAxis);
+            if (seqLinkLowerLimits)
+ 				Py_DECREF(seqLinkLowerLimits);
+ 			if (seqLinkUpperLimits)
+ 				Py_DECREF(seqLinkUpperLimits);
 			if (seqLinkInertialFramePositions)
 				Py_DECREF(seqLinkInertialFramePositions);
 			if (seqLinkInertialFrameOrientations)
@@ -9541,6 +9717,10 @@ static PyObject* pybullet_createMultiBody(PyObject* self, PyObject* args, PyObje
 				Py_DECREF(seqLinkJointTypes);
 			if (seqLinkJoinAxis)
 				Py_DECREF(seqLinkJoinAxis);
+            if (seqLinkLowerLimits)
+ 				Py_DECREF(seqLinkLowerLimits);
+ 			if (seqLinkUpperLimits)
+ 				Py_DECREF(seqLinkUpperLimits);
 			if (seqLinkInertialFramePositions)
 				Py_DECREF(seqLinkInertialFramePositions);
 			if (seqLinkInertialFrameOrientations)
@@ -12245,8 +12425,8 @@ static PyMethodDef SpamMethods[] = {
 	 "Step the simulation using forward dynamics."},
 
 	{"setGravity", (PyCFunction)pybullet_setGravity, METH_VARARGS | METH_KEYWORDS,
-	 "setGravity(gravX, gravY, gravZ, physicsClientId=0)\n"
-	 "Set the gravity acceleration (x,y,z)."},
+	 "setGravity(gravX, gravY, gravZ, body, physicsClientId=0)\n"
+	 "Set the gravity acceleration (x,y,z) for the world, or for a specific body."},
 
 	{"setTimeStep", (PyCFunction)pybullet_setTimeStep, METH_VARARGS | METH_KEYWORDS,
 	 "setTimeStep(timestep, physicsClientId=0)\n"
@@ -12282,6 +12462,10 @@ static PyMethodDef SpamMethods[] = {
 	{"loadSDF", (PyCFunction)pybullet_loadSDF, METH_VARARGS | METH_KEYWORDS,
 	 "Load multibodies from an SDF file."},
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
+    {"clothParams", (PyCFunction)pybullet_clothParams, METH_VARARGS | METH_KEYWORDS,
+ 	 "Update cloth parameters."},
+ 	{"getSoftBodyData", (PyCFunction)pybullet_getSoftBodyData, METH_VARARGS | METH_KEYWORDS,
+ 	 "Get soft body nodes."},
 	{"loadSoftBody", (PyCFunction)pybullet_loadSoftBody, METH_VARARGS | METH_KEYWORDS,
 	 "Load a softbody from an obj file."},
 

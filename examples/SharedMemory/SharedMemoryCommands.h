@@ -3,6 +3,7 @@
 
 //this is a very experimental draft of commands. We will iterate on this API (commands, arguments etc)
 
+#include "BulletSoftBody/btSoftBody.h"
 #include "SharedMemoryPublic.h"
 
 #ifdef __GNUC__
@@ -543,6 +544,51 @@ enum EnumSimParamInternalSimFlags
 ///Controlling a robot involves sending the desired state to its joint motor controllers.
 ///The control mode determines the state variables used for motor control.
 
+struct ClothParamsArgs
+{
+    int m_bodyId;
+    double m_kLST;  // Material: Linear stiffness coefficient [0,1]
+    double m_kAST;  // Material: Area/Angular stiffness coefficient [0,1]
+    double m_kVST;  // Material: Volume stiffness coefficient [0,1]
+    double m_kVCF;       // Velocities correction factor (Baumgarte)
+    double m_kDP;        // Damping coefficient [0,1]
+    double m_kDG;        // Drag coefficient [0,+inf]
+    double m_kLF;        // Lift coefficient [0,+inf]
+    double m_kPR;        // Pressure coefficient [-inf,+inf]
+    double m_kVC;        // Volume conversation coefficient [0,+inf]
+    double m_kDF;        // Dynamic friction coefficient [0,1]
+    double m_kMT;        // Pose matching coefficient [0,1]
+    double m_kCHR;       // Rigid contacts hardness [0,1]
+    double m_kKHR;       // Kinetic contacts hardness [0,1]
+    double m_kSHR;       // Soft contacts hardness [0,1]
+    double m_kAHR;       // Anchors hardness [0,1]
+    int m_viterations;   // Velocities solver iterations
+    int m_piterations;   // Positions solver iterations
+    int m_diterations;   // Drift solver iterations
+};
+
+struct SoftBodyDataArgs
+{
+    int m_bodyId;
+};
+
+struct SendSoftBodyData
+{
+	int m_numNodes;
+    // btAlignedObjectArray<Node> m_nodes;
+    // btSoftBody::tNodeArray m_nodes;
+    float m_x[10000];
+    float m_y[10000];
+    float m_z[10000];
+	int m_numContacts;
+    float m_contact_pos_x[10000];
+    float m_contact_pos_y[10000];
+    float m_contact_pos_z[10000];
+    float m_contact_force_x[10000];
+    float m_contact_force_y[10000];
+    float m_contact_force_z[10000];
+};
+
 struct LoadSoftBodyArgs
 {
 	char m_fileName[MAX_FILENAME_LENGTH];
@@ -1054,6 +1100,8 @@ struct b3CreateMultiBodyArgs
 	int m_linkParentIndices[MAX_CREATE_MULTI_BODY_LINKS];
 	int m_linkJointTypes[MAX_CREATE_MULTI_BODY_LINKS];
 	double m_linkJointAxis[3 * MAX_CREATE_MULTI_BODY_LINKS];
+    double m_linkLowerLimits[MAX_CREATE_MULTI_BODY_LINKS];
+ 	double m_linkUpperLimits[MAX_CREATE_MULTI_BODY_LINKS];
 	int m_flags;
 	int m_numBatchObjects;
 
@@ -1179,6 +1227,8 @@ struct SharedMemoryCommand
 		struct CalculateInverseKinematicsArgs m_calculateInverseKinematicsArguments;
 		struct UserDebugDrawArgs m_userDebugDrawArgs;
 		struct RequestRaycastIntersections m_requestRaycastIntersections;
+        struct ClothParamsArgs m_clothParamsArguments;
+ 		struct SoftBodyDataArgs m_softBodyDataArguments;
 		struct LoadSoftBodyArgs m_loadSoftBodyArguments;
 		struct VRCameraState m_vrCameraStateArguments;
 		struct StateLoggingRequest m_stateLoggingArguments;
@@ -1268,6 +1318,7 @@ struct SharedMemoryStatus
 		struct b3CustomCommandResultArgs m_customCommandResultArgs;
 		struct b3PhysicsSimulationParameters m_simulationParameterResultArgs;
 		struct b3StateSerializationArguments m_saveStateResultArgs;
+        struct SendSoftBodyData m_sendSoftBodyData;
 		struct b3LoadSoftBodyResultArgs m_loadSoftBodyResultArguments;
 		struct SendCollisionShapeDataArgs m_sendCollisionShapeArgs;
 		struct SyncUserDataArgs m_syncUserDataArgs;

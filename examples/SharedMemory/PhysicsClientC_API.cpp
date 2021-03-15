@@ -260,6 +260,82 @@ B3_SHARED_API void b3LoadMJCFCommandSetFlags(b3SharedMemoryCommandHandle command
 	}
 }
 
+B3_SHARED_API b3SharedMemoryCommandHandle b3ClothParamsCommandInit(b3PhysicsClientHandle physClient, int bodyId, double kLST, double kAST, double kVST, double kVCF, double kDP, double kDG, double kLF, double kPR, double kVC, double kDF, double kMT, double kCHR, double kKHR, double kSHR, double kAHR, int viterations, int piterations, int diterations)
+{
+   PhysicsClient* cl = (PhysicsClient*)physClient;
+   b3Assert(cl);
+   b3Assert(cl->canSubmitCommand());
+   if (cl->canSubmitCommand())
+   {
+       struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+       b3Assert(command);
+       command->m_type = CMD_CLOTH_PARAMS;
+       command->m_clothParamsArguments.m_bodyId = bodyId;
+       command->m_clothParamsArguments.m_kLST = kLST;
+       command->m_clothParamsArguments.m_kAST = kAST;
+       command->m_clothParamsArguments.m_kVST = kVST;
+       command->m_clothParamsArguments.m_kVCF = kVCF;
+       command->m_clothParamsArguments.m_kDP = kDP;
+       command->m_clothParamsArguments.m_kDG = kDG;
+       command->m_clothParamsArguments.m_kLF = kLF;
+       command->m_clothParamsArguments.m_kPR = kPR;
+       command->m_clothParamsArguments.m_kVC = kVC;
+       command->m_clothParamsArguments.m_kDF = kDF;
+       command->m_clothParamsArguments.m_kMT = kMT;
+       command->m_clothParamsArguments.m_kCHR = kCHR;
+       command->m_clothParamsArguments.m_kKHR = kKHR;
+       command->m_clothParamsArguments.m_kSHR = kSHR;
+       command->m_clothParamsArguments.m_kAHR = kAHR;
+       command->m_clothParamsArguments.m_viterations = viterations;
+       command->m_clothParamsArguments.m_piterations = piterations;
+       command->m_clothParamsArguments.m_diterations = diterations;
+       return (b3SharedMemoryCommandHandle)command;
+   }
+   return 0;
+}
+
+B3_SHARED_API b3SharedMemoryCommandHandle b3GetSoftBodyDataCommand(b3PhysicsClientHandle physClient, int bodyId)
+{
+	PhysicsClient* cl = (PhysicsClient*)physClient;
+	b3Assert(cl);
+	b3Assert(cl->canSubmitCommand());
+
+	if (cl->canSubmitCommand())
+	{
+		struct SharedMemoryCommand* command = cl->getAvailableSharedMemoryCommand();
+		b3Assert(command);
+		command->m_type = CMD_GET_SOFTBODY_DATA;
+
+        command->m_softBodyDataArguments.m_bodyId = bodyId;
+
+		return (b3SharedMemoryCommandHandle)command;
+    }
+	return 0;
+}
+
+B3_SHARED_API int b3GetSoftBodyData(b3SharedMemoryStatusHandle statusHandle, struct b3SoftBodyData* data)
+{
+	const SharedMemoryStatus* status = (const SharedMemoryStatus*)statusHandle;
+	b3Assert(status);
+	b3Assert(status->m_type == CMD_SOFTBODY_DATA_COMPLETED);
+	if (status && status->m_type == CMD_SOFTBODY_DATA_COMPLETED)
+	{
+        data->m_numNodes = status->m_sendSoftBodyData.m_numNodes;
+        data->m_x = status->m_sendSoftBodyData.m_x;
+        data->m_y = status->m_sendSoftBodyData.m_y;
+        data->m_z = status->m_sendSoftBodyData.m_z;
+        data->m_numContacts = status->m_sendSoftBodyData.m_numContacts;
+        data->m_contact_pos_x = status->m_sendSoftBodyData.m_contact_pos_x;
+        data->m_contact_pos_y = status->m_sendSoftBodyData.m_contact_pos_y;
+        data->m_contact_pos_z = status->m_sendSoftBodyData.m_contact_pos_z;
+        data->m_contact_force_x = status->m_sendSoftBodyData.m_contact_force_x;
+        data->m_contact_force_y = status->m_sendSoftBodyData.m_contact_force_y;
+        data->m_contact_force_z = status->m_sendSoftBodyData.m_contact_force_z;
+		return 1;
+	}
+	return 0;
+}
+
 B3_SHARED_API b3SharedMemoryCommandHandle b3LoadSoftBodyCommandInit(b3PhysicsClientHandle physClient, const char* fileName)
 {
 	PhysicsClient* cl = (PhysicsClient*)physClient;
@@ -668,13 +744,14 @@ B3_SHARED_API b3SharedMemoryCommandHandle b3InitPhysicsParamCommand2(b3SharedMem
 	return (b3SharedMemoryCommandHandle)command;
 }
 
-B3_SHARED_API int b3PhysicsParamSetGravity(b3SharedMemoryCommandHandle commandHandle, double gravx, double gravy, double gravz)
+B3_SHARED_API int b3PhysicsParamSetGravity(b3SharedMemoryCommandHandle commandHandle, double gravx, double gravy, double gravz, int body)
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command->m_type == CMD_SEND_PHYSICS_SIMULATION_PARAMETERS);
 	command->m_physSimParamArgs.m_gravityAcceleration[0] = gravx;
 	command->m_physSimParamArgs.m_gravityAcceleration[1] = gravy;
 	command->m_physSimParamArgs.m_gravityAcceleration[2] = gravz;
+    command->m_physSimParamArgs.m_body = body;
 	command->m_updateFlags |= SIM_PARAM_UPDATE_GRAVITY;
 	return 0;
 }
@@ -2052,7 +2129,9 @@ B3_SHARED_API int b3CreateMultiBodyLink(b3SharedMemoryCommandHandle commandHandl
 										const double linkInertialFrameOrientation[4],
 										int linkParentIndex,
 										int linkJointType,
-										const double linkJointAxis[3])
+										const double linkJointAxis[3],
+                                        double linkLowerLimit,
+                                        double linkUpperLimit)
 {
 	struct SharedMemoryCommand* command = (struct SharedMemoryCommand*)commandHandle;
 	b3Assert(command);
@@ -2097,6 +2176,8 @@ B3_SHARED_API int b3CreateMultiBodyLink(b3SharedMemoryCommandHandle commandHandl
 			command->m_createMultiBodyArgs.m_linkJointAxis[3 * linkIndex + 2] = linkJointAxis[2];
 
 			command->m_createMultiBodyArgs.m_linkMasses[linkIndex] = linkMass;
+            command->m_createMultiBodyArgs.m_linkLowerLimits[linkIndex] = linkLowerLimit;
+ 			command->m_createMultiBodyArgs.m_linkUpperLimits[linkIndex] = linkUpperLimit;
 			command->m_createMultiBodyArgs.m_numLinks++;
 			return numLinks;
 		}

@@ -32,25 +32,31 @@ btScalar btDeformableContactProjection::update(btCollisionObject** deformableBod
 			for (int k = 0; k < m_nodeRigidConstraints[j].size(); ++k)
 			{
 				btDeformableNodeRigidContactConstraint& constraint = m_nodeRigidConstraints[j][k];
-				btScalar localResidualSquare = constraint.solveConstraint(infoGlobal);
+				btVector4 output = constraint.solveConstraint(infoGlobal);
+                btScalar localResidualSquare = output.x();
 				residualSquare = btMax(residualSquare, localResidualSquare);
 			}
 			for (int k = 0; k < m_nodeAnchorConstraints[j].size(); ++k)
 			{
 				btDeformableNodeAnchorConstraint& constraint = m_nodeAnchorConstraints[j][k];
-				btScalar localResidualSquare = constraint.solveConstraint(infoGlobal);
+				btVector4 output = constraint.solveConstraint(infoGlobal);
+                btScalar localResidualSquare = output.x();
 				residualSquare = btMax(residualSquare, localResidualSquare);
 			}
 			for (int k = 0; k < m_faceRigidConstraints[j].size(); ++k)
 			{
 				btDeformableFaceRigidContactConstraint& constraint = m_faceRigidConstraints[j][k];
-				btScalar localResidualSquare = constraint.solveConstraint(infoGlobal);
+				btVector4 output = constraint.solveConstraint(infoGlobal);
+                btScalar localResidualSquare = output.x();
 				residualSquare = btMax(residualSquare, localResidualSquare);
+                // printf("cloth impulse: (%f, %f, %f)\n", output.y(), output.z(), output.w());
+                m_softBodies[j]->m_faceRigidContacts[k].m_impulse.setValue(output.y(), output.z(), output.w());
 			}
 			for (int k = 0; k < m_deformableConstraints[j].size(); ++k)
 			{
 				btDeformableFaceNodeContactConstraint& constraint = m_deformableConstraints[j][k];
-				btScalar localResidualSquare = constraint.solveConstraint(infoGlobal);
+				btVector4 output = constraint.solveConstraint(infoGlobal);
+                btScalar localResidualSquare = output.x();
 				residualSquare = btMax(residualSquare, localResidualSquare);
 			}
 		}

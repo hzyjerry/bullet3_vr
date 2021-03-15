@@ -2409,8 +2409,8 @@ struct ProgrammaticUrdfInterface : public URDFImporterInterface
 			jointMaxVelocity = 0;
 			jointFriction = 0;
 			jointDamping = 0;
-			jointLowerLimit = 1;
-			jointUpperLimit = -1;
+            jointLowerLimit = m_createBodyArgs.m_linkLowerLimits[urdfLinkIndex];
+ 			jointUpperLimit = m_createBodyArgs.m_linkUpperLimits[urdfLinkIndex];
 
 			parent2joint.setOrigin(btVector3(
 				m_createBodyArgs.m_linkPositions[urdfLinkIndex * 3 + 0],
@@ -9006,7 +9006,7 @@ bool PhysicsServerCommandProcessor::processDeformable(const UrdfDeformable& defo
 		}
 		else
 		{
-			//m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
+			// m_data->m_guiHelper->createCollisionShapeGraphicsObject(psb->getCollisionShape());
 
 			btAlignedObjectArray<GLInstanceVertex> gfxVertices;
 			btAlignedObjectArray<int> indices;
@@ -9151,6 +9151,116 @@ bool PhysicsServerCommandProcessor::processDeformable(const UrdfDeformable& defo
 	}
 #endif
 	return true;
+}
+
+bool PhysicsServerCommandProcessor::processClothParamsCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes)
+{
+	const ClothParamsArgs& clothParamsArgs = clientCmd.m_clothParamsArguments;
+
+    InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(clothParamsArgs.m_bodyId);
+    btSoftBody* psb = bodyHandle->m_softBody;
+
+    btSoftBody::Material* pm = psb->appendMaterial();
+    // pm->m_kLST = 0.5;
+    pm->m_kLST = clothParamsArgs.m_kLST;  // Linear stiffness coefficient [0,1]
+    pm->m_kAST = clothParamsArgs.m_kAST;  // Area/Angular stiffness coefficient [0,1]
+    pm->m_kVST = clothParamsArgs.m_kVST;  // Volume stiffness coefficient [0,1]
+    pm->m_flags -= btSoftBody::fMaterial::DebugDraw;
+    psb->generateBendingConstraints(2, pm);
+
+    psb->m_cfg.kVCF = clothParamsArgs.m_kVCF;                 // Velocities correction factor (Baumgarte)
+    psb->m_cfg.kDP = clothParamsArgs.m_kDP;                   // Damping coefficient [0,1]
+    psb->m_cfg.kDG = clothParamsArgs.m_kDG;                   // Drag coefficient [0,+inf]
+    psb->m_cfg.kLF = clothParamsArgs.m_kLF;                   // Lift coefficient [0,+inf]
+    psb->m_cfg.kPR = clothParamsArgs.m_kPR;                   // Pressure coefficient [-inf,+inf]
+    psb->m_cfg.kVC = clothParamsArgs.m_kVC;                   // Volume conversation coefficient [0,+inf]
+    psb->m_cfg.kDF = clothParamsArgs.m_kDF;                   // Dynamic friction coefficient [0,1]
+    psb->m_cfg.kMT = clothParamsArgs.m_kMT;                   // Pose matching coefficient [0,1]
+    psb->m_cfg.kCHR = clothParamsArgs.m_kCHR;                 // Rigid contacts hardness [0,1]
+    psb->m_cfg.kKHR = clothParamsArgs.m_kKHR;                 // Kinetic contacts hardness [0,1]
+    psb->m_cfg.kSHR = clothParamsArgs.m_kSHR;                 // Soft contacts hardness [0,1]
+    psb->m_cfg.kAHR = clothParamsArgs.m_kAHR;                 // Anchors hardness [0,1]
+    psb->m_cfg.viterations = clothParamsArgs.m_viterations;   // Velocities solver iterations
+    psb->m_cfg.piterations = clothParamsArgs.m_piterations;   // Positions solver iterations
+    psb->m_cfg.diterations = clothParamsArgs.m_diterations;   // Drift solver iterations
+
+    serverStatusOut.m_type = CMD_LOAD_SOFT_BODY_COMPLETED;
+	return true;
+}
+
+bool PhysicsServerCommandProcessor::processRequestSoftBodyDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes)
+{
+	serverStatusOut.m_type = CMD_SOFTBODY_DATA_FAILED;
+	const SoftBodyDataArgs& softBodyDataArgs = clientCmd.m_softBodyDataArguments;
+
+    InternalBodyHandle* bodyHandle = m_data->m_bodyHandles.getHandle(softBodyDataArgs.m_bodyId);
+    btSoftBody* psb = bodyHandle->m_softBody;
+    serverStatusOut.m_sendSoftBodyData.m_numNodes = psb->m_nodes.size();
+    // printf("cloth node 0 pos: (%f, %f, %f)\n", psb->m_nodes[0].m_x.x(), psb->m_nodes[0].m_x.y(), psb->m_nodes[0].m_x.z());
+    for (int i = 0; i < psb->m_nodes.size() && i < 10000; i++)
+    {
+        serverStatusOut.m_sendSoftBodyData.m_x[i] = psb->m_nodes[i].m_x.x();
+        serverStatusOut.m_sendSoftBodyData.m_y[i] = psb->m_nodes[i].m_x.y();
+        serverStatusOut.m_sendSoftBodyData.m_z[i] = psb->m_nodes[i].m_x.z();
+    }
+
+    /*
+    // TODO: Need to record and access impulse computed from each node
+    // https://github.com/bulletphysics/bullet3/blob/cdd56e46411527772711da5357c856a90ad9ea67/src/BulletSoftBody/btSoftBody.cpp#L3090
+    // if (psb->m_rcontacts.size() > 0)
+    //     printf("%d cloth contacts: force: %f, pos: (%f, %f, %f)\n", psb->m_rcontacts.size(), psb->m_rcontacts[0].m_c2, psb->m_rcontacts[0].m_node->m_x.x(), psb->m_rcontacts[0].m_node->m_x.y(), psb->m_rcontacts[0].m_node->m_x.z());
+    serverStatusOut.m_sendSoftBodyData.m_numContacts = psb->m_rcontacts.size();
+    for (int i = 0; i < psb->m_rcontacts.size() && i < 20000; i++)
+    {
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_x[i] = psb->m_rcontacts[i].m_node->m_x.x();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_y[i] = psb->m_rcontacts[i].m_node->m_x.y();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_z[i] = psb->m_rcontacts[i].m_node->m_x.z();
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_x[i] = psb->m_rcontacts[i].m_impulse.x() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_y[i] = psb->m_rcontacts[i].m_impulse.y() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_z[i] = psb->m_rcontacts[i].m_impulse.z() / m_data->m_physicsDeltaTime;
+        // serverStatusOut.m_sendSoftBodyData.m_contact_force_x[i] = psb->m_rcontacts[i].m_impulse.x() * psb->m_rcontacts[i].m_c2;
+        // serverStatusOut.m_sendSoftBodyData.m_contact_force_y[i] = psb->m_rcontacts[i].m_impulse.y() * psb->m_rcontacts[i].m_c2;
+        // serverStatusOut.m_sendSoftBodyData.m_contact_force_z[i] = psb->m_rcontacts[i].m_impulse.z() * psb->m_rcontacts[i].m_c2;
+    }
+    */
+
+    // NOTE: There are no node contacts when the soft body is in face contact mode
+    /*
+    serverStatusOut.m_sendSoftBodyData.m_numContacts = psb->m_nodeRigidContacts.size();
+    for (int i = 0; i < psb->m_nodeRigidContacts.size() && i < 20000; i++)
+    {
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_x[i] = psb->m_nodeRigidContacts[i].m_node->m_x.x();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_y[i] = psb->m_nodeRigidContacts[i].m_node->m_x.y();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_z[i] = psb->m_nodeRigidContacts[i].m_node->m_x.z();
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_x[i] = psb->m_nodeRigidContacts[i].m_impulse.x() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_y[i] = psb->m_nodeRigidContacts[i].m_impulse.y() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_z[i] = psb->m_nodeRigidContacts[i].m_impulse.z() / m_data->m_physicsDeltaTime;
+    }
+
+    serverStatusOut.m_sendSoftBodyData.m_numContacts = psb->m_faceNodeContacts.size();
+    for (int i = 0; i < psb->m_faceNodeContacts.size() && i < 20000; i++)
+    {
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_x[i] = psb->m_faceNodeContacts[i].m_node->m_x.x();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_y[i] = psb->m_faceNodeContacts[i].m_node->m_x.y();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_z[i] = psb->m_faceNodeContacts[i].m_node->m_x.z();
+    }
+    */
+
+    serverStatusOut.m_sendSoftBodyData.m_numContacts = psb->m_faceRigidContacts.size();
+    for (int i = 0; i < psb->m_faceRigidContacts.size() && i < 10000; i++)
+    {
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_x[i] = psb->m_faceRigidContacts[i].m_contactPoint.x();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_y[i] = psb->m_faceRigidContacts[i].m_contactPoint.y();
+        serverStatusOut.m_sendSoftBodyData.m_contact_pos_z[i] = psb->m_faceRigidContacts[i].m_contactPoint.z();
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_x[i] = psb->m_faceRigidContacts[i].m_impulse.x() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_y[i] = psb->m_faceRigidContacts[i].m_impulse.y() / m_data->m_physicsDeltaTime;
+        serverStatusOut.m_sendSoftBodyData.m_contact_force_z[i] = psb->m_faceRigidContacts[i].m_impulse.z() / m_data->m_physicsDeltaTime;
+    }
+
+
+	bool hasStatus = true;
+	serverStatusOut.m_type = CMD_SOFTBODY_DATA_COMPLETED;
+	return hasStatus;
 }
 
 bool PhysicsServerCommandProcessor::processLoadSoftBodyCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes)
@@ -10335,33 +10445,50 @@ bool PhysicsServerCommandProcessor::processSendPhysicsParametersCommand(const st
 		btVector3 grav(clientCmd.m_physSimParamArgs.m_gravityAcceleration[0],
 					   clientCmd.m_physSimParamArgs.m_gravityAcceleration[1],
 					   clientCmd.m_physSimParamArgs.m_gravityAcceleration[2]);
-		this->m_data->m_dynamicsWorld->setGravity(grav);
+        if (clientCmd.m_physSimParamArgs.m_body < 0) {
+            this->m_data->m_dynamicsWorld->setGravity(grav);
 #ifndef SKIP_SOFT_BODY_MULTI_BODY_DYNAMICS_WORLD
-		btSoftMultiBodyDynamicsWorld* softWorld = getSoftWorld();
-		if (softWorld)
-		{
-			softWorld->getWorldInfo().m_gravity = grav;
-		}
-		btDeformableMultiBodyDynamicsWorld* deformWorld = getDeformableWorld();
-		if (deformWorld)
-		{
-			deformWorld->getWorldInfo().m_gravity = grav;
-			for (int i = 0; i < m_data->m_lf.size(); ++i)
-			{
-				btDeformableLagrangianForce* force = m_data->m_lf[i];
-				if (force->getForceType() == BT_GRAVITY_FORCE)
-				{
-					btDeformableGravityForce* gforce = (btDeformableGravityForce*)force;
-					gforce->m_gravity = grav;
-				}
-			}
-		}
+            btSoftMultiBodyDynamicsWorld* softWorld = getSoftWorld();
+            if (softWorld)
+            {
+                softWorld->getWorldInfo().m_gravity = grav;
+            }
+            btDeformableMultiBodyDynamicsWorld* deformWorld = getDeformableWorld();
+            if (deformWorld)
+            {
+                deformWorld->getWorldInfo().m_gravity = grav;
+                for (int i = 0; i < m_data->m_lf.size(); ++i)
+                {
+                    btDeformableLagrangianForce* force = m_data->m_lf[i];
+                    if (force->getForceType() == BT_GRAVITY_FORCE)
+                    {
+                        btDeformableGravityForce* gforce = (btDeformableGravityForce*)force;
+                        gforce->m_gravity = grav;
+                    }
+                }
+            }
 
 #endif
-		if (m_data->m_verboseOutput)
-		{
-			b3Printf("Updated Gravity: %f,%f,%f", grav[0], grav[1], grav[2]);
-		}
+            if (m_data->m_verboseOutput)
+            {
+                b3Printf("Updated Gravity: %f,%f,%f", grav[0], grav[1], grav[2]);
+            }
+        } else {
+            InternalBodyData* body = m_data->m_bodyHandles.getHandle(clientCmd.m_physSimParamArgs.m_body);
+
+            if (body && body->m_multiBody) {
+                btMultiBody* mb = body->m_multiBody;
+                mb->setGravity(grav);
+            } else if (body && body->m_rigidBody) {
+                btRigidBody* rb = body->m_rigidBody;
+                rb->setGravity(grav);
+            }
+
+            if (m_data->m_verboseOutput)
+            {
+                b3Printf("Updated Gravity of body: %f,%f,%f", grav[0], grav[1], grav[2]);
+            }
+        }
 	}
 	if (clientCmd.m_updateFlags & SIM_PARAM_UPDATE_NUM_SOLVER_ITERATIONS)
 	{
@@ -13998,6 +14125,16 @@ bool PhysicsServerCommandProcessor::processCommand(const struct SharedMemoryComm
 			hasStatus = processLoadURDFCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
 			break;
 		}
+        case CMD_CLOTH_PARAMS:
+		{
+ 			hasStatus = processClothParamsCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
+ 			break;
+ 		}
+ 		case CMD_GET_SOFTBODY_DATA:
+ 		{
+ 			hasStatus = processRequestSoftBodyDataCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);
+ 			break;
+ 		}
 		case CMD_LOAD_SOFT_BODY:
 		{
 			hasStatus = processLoadSoftBodyCommand(clientCmd, serverStatusOut, bufferServerToClient, bufferSizeInBytes);

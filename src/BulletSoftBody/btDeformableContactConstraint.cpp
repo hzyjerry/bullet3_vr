@@ -77,7 +77,7 @@ btVector3 btDeformableNodeAnchorConstraint::getVa() const
 	return va;
 }
 
-btScalar btDeformableNodeAnchorConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
+btVector4 btDeformableNodeAnchorConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
 {
 	const btSoftBody::sCti& cti = m_anchor->m_cti;
 	btVector3 va = getVa();
@@ -117,7 +117,7 @@ btScalar btDeformableNodeAnchorConstraint::solveConstraint(const btContactSolver
 			multibodyLinkCol->m_multiBody->applyDeltaVeeMultiDof2(deltaV_t2, impulse.dot(m_anchor->t2));
 		}
 	}
-	return residualSquare;
+	return btVector4(residualSquare, impulse.x(), impulse.y(), impulse.z());
 }
 
 btVector3 btDeformableNodeAnchorConstraint::getVb() const
@@ -253,7 +253,7 @@ btVector3 btDeformableRigidContactConstraint::getSplitVa() const
 	return va;
 }
 
-btScalar btDeformableRigidContactConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
+btVector4 btDeformableRigidContactConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
 {
 	const btSoftBody::sCti& cti = m_contact->m_cti;
 	btVector3 va = getVa();
@@ -274,11 +274,16 @@ btScalar btDeformableRigidContactConstraint::solveConstraint(const btContactSolv
 	{
 		impulse += m_contact->m_c0 * (m_penetration * infoGlobal.m_deformable_erp / infoGlobal.m_timeStep * cti.m_normal);
 	}
+    // printf("cloth impulse: (%f, %f, %f)\n", impulse.x(), impulse.y(), impulse.z());
+	// const btSoftBody::DeformableFaceRigidContact* contact = getContact();
+	// contact->m_node->m_v -= dv;
+    // contact->m_impulse.setValue(impulse.x(), impulse.y(), impulse.z());
+    // m_contact->m_impulse.setValue(impulse.x(), impulse.y(), impulse.z());
 	btVector3 impulse_normal = m_contact->m_c0 * (cti.m_normal * dn);
 	btVector3 impulse_tangent = impulse - impulse_normal;
 	if (dn > 0)
 	{
-		return 0;
+		return btVector4(0, 0, 0, 0);
 	}
 	m_binding = true;
 	btScalar residualSquare = dn * dn;
@@ -350,7 +355,7 @@ btScalar btDeformableRigidContactConstraint::solveConstraint(const btContactSolv
 			}
 		}
 	}
-	return residualSquare;
+	return btVector4(residualSquare, impulse.x(), impulse.y(), impulse.z());
 }
 
 btScalar btDeformableRigidContactConstraint::solveSplitImpulse(const btContactSolverInfo& infoGlobal)
@@ -627,7 +632,7 @@ btVector3 btDeformableFaceNodeContactConstraint::getDv(const btSoftBody::Node* n
 	return dv * contact->m_weights[2];
 }
 
-btScalar btDeformableFaceNodeContactConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
+btVector4 btDeformableFaceNodeContactConstraint::solveConstraint(const btContactSolverInfo& infoGlobal)
 {
 	btVector3 va = getVa();
 	btVector3 vb = getVb();
@@ -636,6 +641,8 @@ btScalar btDeformableFaceNodeContactConstraint::solveConstraint(const btContactS
 	// dn is the normal component of velocity diffrerence. Approximates the residual. // todo xuchenhan@: this prob needs to be scaled by dt
 	btScalar residualSquare = dn * dn;
 	btVector3 impulse = m_contact->m_c0 * vr;
+    // printf("cloth impulse: (%f, %f, %f)\n", impulse.x(), impulse.y(), impulse.z());
+    // m_contact->m_impulse.setValue(impulse.x(), impulse.y(), impulse.z());
 	const btVector3 impulse_normal = m_contact->m_c0 * (m_contact->m_normal * dn);
 	btVector3 impulse_tangent = impulse - impulse_normal;
 
@@ -685,7 +692,7 @@ btScalar btDeformableFaceNodeContactConstraint::solveConstraint(const btContactS
 	impulse = impulse_normal + impulse_tangent;
 	// apply impulse to deformable nodes involved and change their velocities
 	applyImpulse(impulse);
-	return residualSquare;
+	return btVector4(residualSquare, impulse.x(), impulse.y(), impulse.z());
 }
 
 void btDeformableFaceNodeContactConstraint::applyImpulse(const btVector3& impulse)

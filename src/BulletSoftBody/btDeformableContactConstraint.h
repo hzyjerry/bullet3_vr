@@ -1,5 +1,5 @@
 /*
- Written by Xuchen Han <xuchenhan2015@u.northwestern.edu>
+Written by Xuchen Han <xuchenhan2015@u.northwestern.edu>
  
  Bullet Continuous Collision Detection and Physics Library
  Copyright (c) 2019 Google Inc. http://bulletphysics.org
@@ -48,7 +48,7 @@ public:
 
 	// solve the constraint with inelastic impulse and return the error, which is the square of normal component of velocity diffrerence
 	// the constraint is solved by calculating the impulse between object A and B in the contact and apply the impulse to both objects involved in the contact
-	virtual btScalar solveConstraint(const btContactSolverInfo& infoGlobal) = 0;
+	virtual btVector4 solveConstraint(const btContactSolverInfo& infoGlobal) = 0;
 
 	// get the velocity of the object A in the contact
 	virtual btVector3 getVa() const = 0;
@@ -84,9 +84,9 @@ public:
 
 	virtual ~btDeformableStaticConstraint() {}
 
-	virtual btScalar solveConstraint(const btContactSolverInfo& infoGlobal)
+	virtual btVector4 solveConstraint(const btContactSolverInfo& infoGlobal)
 	{
-		return 0;
+		return btVector4(0, 0, 0, 0);
 	}
 
 	virtual btVector3 getVa() const
@@ -121,7 +121,7 @@ public:
 	virtual ~btDeformableNodeAnchorConstraint()
 	{
 	}
-	virtual btScalar solveConstraint(const btContactSolverInfo& infoGlobal);
+	virtual btVector4 solveConstraint(const btContactSolverInfo& infoGlobal);
 
 	// object A is the rigid/multi body, and object B is the deformable node/face
 	virtual btVector3 getVa() const;
@@ -164,7 +164,7 @@ public:
 	// get the split impulse velocity of the rigid/multibdoy at the contaft
 	virtual btVector3 getSplitVa() const;
 
-	virtual btScalar solveConstraint(const btContactSolverInfo& infoGlobal);
+	virtual btVector4 solveConstraint(const btContactSolverInfo& infoGlobal);
 
 	virtual void setPenetrationScale(btScalar scale)
 	{
@@ -260,7 +260,7 @@ public:
 	btDeformableFaceNodeContactConstraint() {}
 	virtual ~btDeformableFaceNodeContactConstraint() {}
 
-	virtual btScalar solveConstraint(const btContactSolverInfo& infoGlobal);
+	virtual btVector4 solveConstraint(const btContactSolverInfo& infoGlobal);
 
 	// get the velocity of the object A in the contact
 	virtual btVector3 getVa() const;
