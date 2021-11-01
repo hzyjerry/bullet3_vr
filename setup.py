@@ -41,6 +41,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
         if _platform == "darwin":
           if src.endswith('.cpp'):
             newcc_args = cc_args + ["-stdlib=libc++"]
+	  newcc_args += ["-std=c99"]
         self._compile(obj, src, ext, newcc_args, extra_postargs, pp_opts)
     # convert to list, imap is evaluated on-demand
     pool = multiprocessing.pool.ThreadPool(N)
