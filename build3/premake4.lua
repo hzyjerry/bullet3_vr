@@ -56,10 +56,37 @@
 
 	newoption
 	{
+		trigger = "enable_stable_pd",
+		description = "Enable Stable PD control in PyBullet"
+	}
+
+
+	newoption
+	{
 		trigger = "enable_static_vr_plugin",
 		description = "Statically link vr plugin (in examples/SharedMemory/plugins/vrSyncPlugin)"
 	}
-	
+         newoption
+        {
+                trigger = "enable_static_test_plugin",
+                description = "Statically link test plugin (in examples/SharedMemory/plugins/testPlugin)"
+        }
+         newoption
+        {
+                trigger = "enable_static_tiny_renderer__plugin",
+                description = "Statically link vr plugin (in examples/SharedMemory/plugins/tinyRendererPlugin)"
+        }
+         newoption
+        {
+                trigger = "enable_static_pd_control_plugin",
+                description = "Statically link vr plugin (in examples/SharedMemory/plugins/pdControlPlugin)"
+        }
+         newoption
+        {
+                trigger = "enable_static_collision_filter_plugin",
+                description = "Statically link vr plugin (in examples/SharedMemory/plugins/collisionFilterPlugin)"
+        }
+ 
 	newoption
 	{
 		trigger = "enable_physx",
@@ -312,6 +339,12 @@ end
 		trigger = "no-test",
 		description = "Disable all tests"
 	}
+	newoption
+        {       
+                trigger = "test-bullet2",
+
+                description = "Enable Bullet2 LinearMath test"
+        }
 
 	newoption
 	{
@@ -329,6 +362,12 @@ end
 	{
 		trigger = "double",
 		description = "Double precision version of Bullet"
+	}
+
+	newoption
+	{
+		trigger = "clamp-velocities",
+		description = "Limit maximum velocities to reduce FP exception risk"
 	}
 	
 	newoption
@@ -353,13 +392,28 @@ end
 	if _OPTIONS["double"] then
 		defines {"BT_USE_DOUBLE_PRECISION"}
 	end
+	if _OPTIONS["clamp-velocities"] then
+		defines {"BT_CLAMP_VELOCITY_TO=9999"}
+	end
 
+	newoption
+	{
+		trigger = "dynamic-runtime",
+		description = "Enable dynamic DLL CRT runtime"
+	}
 	configurations {"Release", "Debug"}
 	configuration "Release"
-		flags { "Optimize", "EnableSSE2","StaticRuntime", "NoMinimalRebuild", "FloatFast"}
+		flags { "Optimize", "EnableSSE2", "NoMinimalRebuild", "FloatFast"}
+		if not _OPTIONS["dynamic-runtime"] then
+			flags { "StaticRuntime" } 
+		end
 	configuration "Debug"
 		defines {"_DEBUG=1"}
-		flags { "Symbols", "StaticRuntime" , "NoMinimalRebuild", "NoEditAndContinue" ,"FloatFast"}
+		flags { "Symbols" , "NoMinimalRebuild", "NoEditAndContinue" ,"FloatFast"}
+		if not _OPTIONS["dynamic-runtime"] then
+			flags { "StaticRuntime" } 
+		end
+
 
 	if os.is("Linux") or os.is("macosx") then
 		if os.is64bit() then
@@ -618,7 +672,9 @@ end
         end
 
 	if not _OPTIONS["no-test"] then
+                if _OPTIONS["test-bullet2"] then
 		include "../test/Bullet2"
+		end
 
 		if not _OPTIONS["no-gtest"] then
 			include "../test/gtest-1.7.0"

@@ -17,6 +17,8 @@
 #include "our_gl.h"
 #include "tgaimage.h"
 
+using namespace TinyRender;
+
 struct DepthShader : public IShader
 {
 	Model* m_model;
@@ -156,17 +158,20 @@ struct Shader : public IShader
 		float index_x = b3Max(float(0.0), b3Min(float(m_width - 1), p[0]));
 		float index_y = b3Max(float(0.0), b3Min(float(m_height - 1), p[1]));
 		int idx = int(index_x) + int(index_y) * m_width;                       // index in the shadowbuffer array
-		float shadow = 0.8 + 0.2 * (m_shadowBuffer->at(idx) < -depth + 0.05);  // magic coeff to avoid z-fighting
-
+		float shadow = 1.0;
+		if (m_shadowBuffer && idx >=0 && idx <m_shadowBuffer->size())
+		{
+			shadow = 0.8 + 0.2 * (m_shadowBuffer->at(idx) < -depth + 0.05);  // magic coeff to avoid z-fighting
+		}
 		Vec3f bn = (varying_nrm * bar).normalize();
 		Vec2f uv = varying_uv * bar;
 
 		Vec3f reflection_direction = (bn * (bn * m_light_dir_local * 2.f) - m_light_dir_local).normalize();
-                float specular = std::pow(b3Max(reflection_direction.z, 0.f),
-                                          m_model->specular(uv));
-                float diffuse = b3Max(0.f, bn * m_light_dir_local);
+        float specular = std::pow(b3Max(reflection_direction.z, 0.f),
+                                    m_model->specular(uv));
+        float diffuse = b3Max(0.f, bn * m_light_dir_local);
 
-                color = m_model->diffuse(uv);
+        color = m_model->diffuse(uv);
 		color[0] *= m_colorRGBA[0];
 		color[1] *= m_colorRGBA[1];
 		color[2] *= m_colorRGBA[2];
@@ -174,7 +179,13 @@ struct Shader : public IShader
 
 		for (int i = 0; i < 3; ++i)
 		{
-			color[i] = b3Min(int(m_ambient_coefficient * color[i] + shadow * (m_diffuse_coefficient * diffuse + m_specular_coefficient * specular) * color[i] * m_light_color[i]), 255);
+			int orgColor = 0;
+			float floatColor = (m_ambient_coefficient * color[i] + shadow * (m_diffuse_coefficient * diffuse + m_specular_coefficient * specular) * color[i] * m_light_color[i]);
+			if (floatColor==floatColor)
+			{
+				orgColor=int(floatColor);
+			}
+			color[i] = b3Min(orgColor, 255);
 		}
 
 		return false;
@@ -189,7 +200,8 @@ TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedOb
 	  m_segmentationMaskBufferPtr(0),
 	  m_userData(0),
 	  m_userIndex(-1),
-	  m_objectIndex(-1)
+	  m_objectIndex(-1),
+	  m_doubleSided(false)
 {
 	Vec3f eye(1, 1, 3);
 	Vec3f center(0, 0, 0);
@@ -201,6 +213,7 @@ TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedOb
 	m_lightAmbientCoeff = 0.6;
 	m_lightDiffuseCoeff = 0.35;
 	m_lightSpecularCoeff = 0.05;
+
 }
 
 TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedObjectArray<float>& depthBuffer, b3AlignedObjectArray<float>* shadowBuffer, b3AlignedObjectArray<int>* segmentationMaskBuffer, int objectIndex, int linkIndex)
@@ -212,7 +225,8 @@ TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedOb
 	  m_userData(0),
 	  m_userIndex(-1),
 	  m_objectIndex(objectIndex),
-	  m_linkIndex(linkIndex)
+	  m_linkIndex(linkIndex),
+	  m_doubleSided(false)
 {
 	Vec3f eye(1, 1, 3);
 	Vec3f center(0, 0, 0);
@@ -230,15 +244,18 @@ TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedOb
 	: m_model(0),
 	  m_rgbColorBuffer(rgbColorBuffer),
 	  m_depthBuffer(depthBuffer),
+	  m_shadowBuffer(0),
 	  m_segmentationMaskBufferPtr(0),
 	  m_userData(0),
 	  m_userIndex(-1),
-	  m_objectIndex(-1)
+	  m_objectIndex(-1),
+	m_doubleSided(false)
 {
 	Vec3f eye(1, 1, 3);
 	Vec3f center(0, 0, 0);
 	Vec3f up(0, 0, 1);
 	m_lightDirWorld.setValue(0, 0, 0);
+	m_lightDistance = 10;
 	m_lightColor.setValue(1, 1, 1);
 	m_localScaling.setValue(1, 1, 1);
 	m_modelMatrix = Matrix::identity();
@@ -251,10 +268,12 @@ TinyRenderObjectData::TinyRenderObjectData(TGAImage& rgbColorBuffer, b3AlignedOb
 	: m_model(0),
 	  m_rgbColorBuffer(rgbColorBuffer),
 	  m_depthBuffer(depthBuffer),
+	  m_shadowBuffer(0),
 	  m_segmentationMaskBufferPtr(segmentationMaskBuffer),
 	  m_userData(0),
 	  m_userIndex(-1),
-	  m_objectIndex(objectIndex)
+	  m_objectIndex(objectIndex),
+	m_doubleSided(false)
 {
 	Vec3f eye(1, 1, 3);
 	Vec3f center(0, 0, 0);
@@ -396,7 +415,7 @@ void TinyRenderObjectData::createCube(float halfExtentsX, float halfExtentsY, fl
 	{
 		m_model->addVertex(halfExtentsX * cube_vertices_textured[i * 9],
 						   halfExtentsY * cube_vertices_textured[i * 9 + 1],
-						   halfExtentsY * cube_vertices_textured[i * 9 + 2],
+						   halfExtentsZ * cube_vertices_textured[i * 9 + 2],
 						   cube_vertices_textured[i * 9 + 4],
 						   cube_vertices_textured[i * 9 + 5],
 						   cube_vertices_textured[i * 9 + 6],
@@ -547,13 +566,16 @@ void TinyRenderer::renderObject(TinyRenderObjectData& renderData)
 					shader.vertex(i, j);
 				}
 
-				// backface culling
-				btVector3 v0(shader.world_tri.col(0)[0], shader.world_tri.col(0)[1], shader.world_tri.col(0)[2]);
-				btVector3 v1(shader.world_tri.col(1)[0], shader.world_tri.col(1)[1], shader.world_tri.col(1)[2]);
-				btVector3 v2(shader.world_tri.col(2)[0], shader.world_tri.col(2)[1], shader.world_tri.col(2)[2]);
-				btVector3 N = (v1 - v0).cross(v2 - v0);
-				if ((v0 - P).dot(N) >= 0)
-					continue;
+				if (!renderData.m_doubleSided)
+				{
+					// backface culling
+					btVector3 v0(shader.world_tri.col(0)[0], shader.world_tri.col(0)[1], shader.world_tri.col(0)[2]);
+					btVector3 v1(shader.world_tri.col(1)[0], shader.world_tri.col(1)[1], shader.world_tri.col(1)[2]);
+					btVector3 v2(shader.world_tri.col(2)[0], shader.world_tri.col(2)[1], shader.world_tri.col(2)[2]);
+					btVector3 N = (v1 - v0).cross(v2 - v0);
+					if ((v0 - P).dot(N) >= 0)
+						continue;
+				}
 
 				mat<4, 3, float> stackTris[3];
 

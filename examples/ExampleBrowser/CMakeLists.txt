@@ -61,11 +61,12 @@ IF (BUILD_SHARED_LIBS)
                                 BulletInverseDynamics LinearMath OpenGLWindow gwen BussIK
                                 ${COCOA} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
                  )
-  			ELSE(APPLE)
+				ELSE(APPLE)
+                 FIND_PACKAGE(Threads)
                  TARGET_LINK_LIBRARIES(
                                 BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils
                                 BulletInverseDynamics LinearMath OpenGLWindow gwen BussIK
-                                pthread ${DL}
+                                ${CMAKE_THREAD_LIBS_INIT} ${DL}
                         )
         ENDIF(APPLE)
 	ENDIF(WIN32)
@@ -94,6 +95,9 @@ LINK_LIBRARIES(
         BulletExampleBrowserLib Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils BulletInverseDynamics LinearMath OpenGLWindow gwen BussIK
 )
 
+
+add_definitions(-DINCLUDE_CLOTH_DEMOS)
+
 IF (WIN32)
 	INCLUDE_DIRECTORIES(
 		${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/glad
@@ -113,7 +117,8 @@ ELSE(WIN32)
 		ADD_DEFINITIONS("-DGLEW_STATIC")
 		ADD_DEFINITIONS("-DGLEW_DYNAMIC_LOAD_ALL_GLX_FUNCTIONS=1")
 		INCLUDE_DIRECTORIES( ${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/glad )
-		LINK_LIBRARIES( pthread ${DL})
+		FIND_PACKAGE(Threads)
+		LINK_LIBRARIES( ${CMAKE_THREAD_LIBS_INIT} ${DL} )
 	ENDIF(APPLE)
 ENDIF(WIN32)
 
@@ -168,6 +173,14 @@ SET(BulletExampleBrowser_SRCS
 	../SharedMemory/PhysicsClientSharedMemory_C_API.cpp
 	../SharedMemory/PhysicsClient.cpp
 	../SharedMemory/PhysicsClientC_API.cpp
+	../SharedMemory/GraphicsServerExample.cpp
+	../SharedMemory/GraphicsClientExample.cpp
+	../SharedMemory/RemoteGUIHelper.cpp
+	../SharedMemory/GraphicsServerExample.h
+	../SharedMemory/GraphicsClientExample.h
+	../SharedMemory/RemoteGUIHelper.h
+	../SharedMemory/GraphicsSharedMemoryCommands.h
+	../SharedMemory/GraphicsSharedMemoryPublic.h
 	../SharedMemory/PhysicsServerExample.cpp
 	../SharedMemory/PhysicsServerExampleBullet2.cpp
 	../SharedMemory/PhysicsClientExample.cpp
@@ -207,12 +220,8 @@ SET(BulletExampleBrowser_SRCS
 	../MultiThreadedDemo/MultiThreadedDemo.h
 	../MultiThreadedDemo/CommonRigidBodyMTBase.cpp
 	../MultiThreadedDemo/CommonRigidBodyMTBase.h
-	../BlockSolver/btBlockSolver.cpp
-	../BlockSolver/btBlockSolver.h
-	../BlockSolver/BlockSolverExample.cpp
-	../BlockSolver/BlockSolverExample.h
-	../BlockSolver/RigidBodyBoxes.cpp
-	../BlockSolver/RigidBodyBoxes.h
+	../Heightfield/HeightfieldExample.cpp
+	../Heightfield/HeightfieldExample.h
 	../Tutorial/Tutorial.cpp
 	../Tutorial/Tutorial.h
 	../Tutorial/Dof6ConstraintTutorial.cpp
@@ -343,10 +352,62 @@ SET(BulletExampleBrowser_SRCS
   ../MultiBody/TestJointTorqueSetup.h
   ../MultiBody/InvertedPendulumPDControl.cpp
   ../MultiBody/InvertedPendulumPDControl.h
- ../MultiBody/MultiBodyConstraintFeedback.cpp
+  ../MultiBody/MultiBodyConstraintFeedback.cpp
+  ../MultiBody/KinematicMultiBodyExample.cpp
+  ../SoftDemo/SoftDemo.cpp
+  ../SoftDemo/SoftDemo.h
+  ../DeformableDemo/DeformableContact.cpp
+  ../DeformableDemo/DeformableContact.h
+  ../DeformableDemo/GraspDeformable.cpp
+  ../DeformableDemo/GraspDeformable.h
+  ../DeformableDemo/Pinch.cpp
+  ../DeformableDemo/Pinch.h
+  ../DeformableDemo/DeformableSelfCollision.cpp
+  ../DeformableDemo/DeformableSelfCollision.h
+  ../DeformableDemo/PinchFriction.cpp
+  ../DeformableDemo/PinchFriction.h
+  ../DeformableDemo/ClothFriction.cpp
+  ../DeformableDemo/ClothFriction.h
+  ../DeformableDemo/DeformableMultibody.cpp
+  ../DeformableDemo/DeformableMultibody.h
+  ../DeformableDemo/DeformableRigid.cpp
+  ../DeformableDemo/DeformableRigid.h
+  ../DeformableDemo/SplitImpulse.cpp
+  ../DeformableDemo/SplitImpulse.h
+  ../DeformableDemo/VolumetricDeformable.cpp
+  ../DeformableDemo/VolumetricDeformable.h
+  ../DeformableDemo/Collide.cpp
+  ../DeformableDemo/Collide.h
+  ../DeformableDemo/LargeDeformation.cpp
+  ../DeformableDemo/LoadDeformed.h
+  ../DeformableDemo/LoadDeformed.cpp
+  ../DeformableDemo/LargeDeformation.h
+  ../DeformableDemo/DeformableClothAnchor.cpp
+  ../DeformableDemo/DeformableClothAnchor.h
+  ../DeformableDemo/MultibodyClothAnchor.cpp
+  ../DeformableDemo/MultibodyClothAnchor.h
   ../MultiBody/MultiDofDemo.cpp
   ../MultiBody/MultiDofDemo.h
   ../RigidBody/RigidBodySoftContact.cpp
+  ../RigidBody/KinematicRigidBodyExample.cpp
+	../ReducedDeformableDemo/ConservationTest.cpp
+	../ReducedDeformableDemo/ConservationTest.h
+	../ReducedDeformableDemo/Springboard.cpp
+	../ReducedDeformableDemo/Springboard.h
+	../ReducedDeformableDemo/ModeVisualizer.cpp
+	../ReducedDeformableDemo/ModeVisualizer.h
+	../ReducedDeformableDemo/FreeFall.cpp
+	../ReducedDeformableDemo/FreeFall.h
+	../ReducedDeformableDemo/FrictionSlope.cpp
+	../ReducedDeformableDemo/FrictionSlope.h
+	../ReducedDeformableDemo/ReducedCollide.cpp
+	../ReducedDeformableDemo/ReducedCollide.h
+	../ReducedDeformableDemo/ReducedGrasp.cpp
+	../ReducedDeformableDemo/ReducedGrasp.h
+	../ReducedDeformableDemo/ReducedBenchmark.cpp
+	../ReducedDeformableDemo/ReducedBenchmark.h
+	../ReducedDeformableDemo/ReducedMotorGrasp.cpp
+	../ReducedDeformableDemo/ReducedMotorGrasp.h
   ../Constraints/TestHingeTorque.cpp
   ../Constraints/TestHingeTorque.h
   ../Constraints/ConstraintDemo.cpp

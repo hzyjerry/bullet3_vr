@@ -257,7 +257,11 @@ void MyKeyboardCallback(int key, int state)
 			}
 			else
 			{
+#ifdef _WIN32
 				b3ChromeUtilsStopTimingsAndWriteJsonFile("timings");
+#else
+				b3ChromeUtilsStopTimingsAndWriteJsonFile("/tmp/timings");
+#endif
 			}
 		}
 
@@ -917,6 +921,13 @@ bool OpenGLExampleBrowser::init(int argc, char* argv[])
 	m_internalData->m_app = s_app;
 	char* gVideoFileName = 0;
 	args.GetCmdLineArgument("mp4", gVideoFileName);
+	int gVideoFps = 0;
+	args.GetCmdLineArgument("mp4fps", gVideoFps);
+	if (gVideoFps)
+	{
+		simpleApp->setMp4Fps(gVideoFps);
+	}
+
 #ifndef NO_OPENGL3
 	if (gVideoFileName)
 		simpleApp->dumpFramesToVideo(gVideoFileName);
@@ -1159,10 +1170,12 @@ static int upadte_calls = 0;
 
 void OpenGLExampleBrowser::update(float deltaTime)
 {
+
 	b3ChromeUtilsEnableProfiling();
 
 	if (!gEnableRenderLoop && !singleStepSimulation)
 	{
+		B3_PROFILE("updateGraphics");
 		sCurrentDemo->updateGraphics();
 		return;
 	}
@@ -1171,8 +1184,11 @@ void OpenGLExampleBrowser::update(float deltaTime)
 	// printf("daupte calls %d\n", upadte_calls);
 
 	B3_PROFILE("OpenGLExampleBrowser::update");
-	assert(glGetError() == GL_NO_ERROR);
-	s_instancingRenderer->init();
+	//assert(glGetError() == GL_NO_ERROR);
+	{
+		B3_PROFILE("s_instancingRenderer");
+		s_instancingRenderer->init();
+	}
 	DrawGridData dg;
 	dg.upAxis = s_app->getUpAxis();
 
@@ -1220,6 +1236,7 @@ void OpenGLExampleBrowser::update(float deltaTime)
 
 			if (gFixedTimeStep > 0)
 			{
+				
 				sCurrentDemo->stepSimulation(gFixedTimeStep);
 			}
 			else
@@ -1298,22 +1315,25 @@ void OpenGLExampleBrowser::update(float deltaTime)
 		}
 #endif  //#ifndef BT_NO_PROFILE
 
-		if (sUseOpenGL2)
 		{
-			saveOpenGLState(s_instancingRenderer->getScreenWidth() * s_window->getRetinaScale(), s_instancingRenderer->getScreenHeight() * s_window->getRetinaScale());
-		}
+			B3_PROFILE("updateOpenGL");
+			if (sUseOpenGL2)
+			{
+				saveOpenGLState(s_instancingRenderer->getScreenWidth() * s_window->getRetinaScale(), s_instancingRenderer->getScreenHeight() * s_window->getRetinaScale());
+			}
 
-		if (m_internalData->m_gui)
-		{
-			gBlockGuiMessages = true;
-			m_internalData->m_gui->draw(s_instancingRenderer->getScreenWidth(), s_instancingRenderer->getScreenHeight());
+			if (m_internalData->m_gui)
+			{
+				gBlockGuiMessages = true;
+				m_internalData->m_gui->draw(s_instancingRenderer->getScreenWidth(), s_instancingRenderer->getScreenHeight());
 
-			gBlockGuiMessages = false;
-		}
+				gBlockGuiMessages = false;
+			}
 
-		if (sUseOpenGL2)
-		{
-			restoreOpenGLState();
+			if (sUseOpenGL2)
+			{
+				restoreOpenGLState();
+			}
 		}
 	}
 

@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -313,35 +313,6 @@ public:
 			m_guiHelper->getRenderInterface()->drawLines(&points[0].m_floats[0], lineColor, points.size(), sizeof(btVector3FloatData), &indices[0], indices.size(), 1);
 		}
 
-#if 0
-		glDisable (GL_LIGHTING);
-		glColor3f (0.0, 1.0, 0.0);
-		glBegin (GL_LINES);
-		int i;
-
-		for (i = 0; i < NUMRAYS; i++)
-		{
-			glVertex3f (source[i][0], source[i][1], source[i][2]);
-			glVertex3f (hit[i][0], hit[i][1], hit[i][2]);
-		}
-		glEnd ();
-		glColor3f (1.0, 1.0, 1.0);
-		glBegin (GL_LINES);
-		for (i = 0; i < NUMRAYS; i++)
-		{
-			glVertex3f (hit[i][0], hit[i][1], hit[i][2]);
-			glVertex3f (hit[i][0] + normal[i][0], hit[i][1] + normal[i][1], hit[i][2] + normal[i][2]);
-		}
-		glEnd ();
-		glColor3f (0.0, 1.0, 1.0);
-		glBegin (GL_POINTS);
-		for ( i = 0; i < NUMRAYS; i++)
-		{
-			glVertex3f (hit[i][0], hit[i][1], hit[i][2]);
-		}
-		glEnd ();
-		glEnable (GL_LIGHTING);
-#endif  //USE_GRAPHICAL_BENCHMARK
 	}
 };
 

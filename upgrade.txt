@@ -1,0 +1,68 @@
+Auto-merging .gitignore
+Auto-merging README.md
+ (content): Merge in README.md
+Auto-merging examples/CommonInterfaces/CommonRenderInterface.h
+Auto-merging examples/ExampleBrowser/InProcessExampleBrowser.cpp
+Auto-merging examples/ExampleBrowser/OpenGLExampleBrowser.cpp
+Auto-merging examples/ExampleBrowser/OpenGLGuiHelper.cpp
+ (content): Merge conflict in examples/ExampleBrowser/OpenGLGuiHelper.cpp
+Auto-merging examples/Importers/ImportObjDemo/Wavefront2GLInstanceGraphicsShape.cpp
+ (content): Merge conflict in examples/Importers/ImportObjDemo/Wavefront2GLInstanceGraphicsShape.cpp
+Auto-merging examples/OpenGLWindow/GLInstancingRenderer.cpp
+Auto-merging examples/OpenGLWindow/GLInstancingRenderer.h
+Auto-merging examples/OpenGLWindow/SimpleOpenGL2Renderer.cpp
+Auto-merging examples/OpenGLWindow/SimpleOpenGL2Renderer.h
+Auto-merging erxamples/SharedMemory/PhysicsClient.h
+ (content): Merge conflict in examples/SharedMemory/PhysicsClient.h
+Auto-merging examples/SharedMemory/PhysicsClientC_API.cpp
+ (content): Merge conflict in examples/SharedMemory/PhysicsClientC_API.cpp
+Auto-merging examples/SharedMemory/PhysicsClientC_API.h
+ (content): Merge conflict in examples/SharedMemory/PhysicsClientC_API.h
+Auto-merging examples/SharedMemory/PhysicsClientExample.cpp
+Auto-merging examples/SharedMemory/PhysicsClientSharedMemory.cpp
+Auto-merging examples/SharedMemory/PhysicsClientSharedMemory.h
+Auto-merging examples/SharedMemory/PhysicsDirect.cpp
+Auto-merging examples/SharedMemory/PhysicsDirect.h
+Auto-merging examples/SharedMemory/PhysicsLoopBack.cpp
+ (content): Merge conflict in examples/SharedMemory/PhysicsLoopBack.cpp
+Auto-merging examples/SharedMemory/PhysicsLoopBack.h
+Auto-merging examples/SharedMemory/PhysicsServerCommandProcessor.cpp
+ (content): Merge conflict in examples/SharedMemory/PhysicsServerCommandProcessor.cpp
+Auto-merging examples/SharedMemory/PhysicsServerCommandProcessor.h
+Auto-merging examples/SharedMemory/PhysicsServerExample.cpp
+ (content): Merge conflict in examples/SharedMemory/PhysicsServerExample.cpp
+Auto-merging examples/SharedMemory/PhysicsServerSharedMemory.cpp
+Auto-merging examples/SharedMemory/SharedMemoryCommands.h
+ (content): Merge conflict in examples/SharedMemory/SharedMemoryCommands.h
+Auto-merging examples/SharedMemory/SharedMemoryPublic.h
+ (content): Merge conflict in examples/SharedMemory/SharedMemoryPublic.h
+Auto-merging examples/SharedMemory/b3RobotSimulatorClientAPI_NoDirect.cpp
+Auto-merging examples/SharedMemory/b3RobotSimulatorClientAPI_NoDirect.h
+Auto-merging examples/StandaloneMain/hellovr_opengl_main.cpp
+Auto-merging examples/pybullet/examples/load_soft_body.py
+ (content): Merge conflict in examples/pybullet/examples/load_soft_body.py
+Auto-merging examples/pybullet/examples/saveRestoreState.py
+Auto-merging examples/pybullet/pybullet.c
+ (content): Merge conflict in examples/pybullet/pybullet.c
+Auto-merging setup.py
+ (content): Merge conflict in setup.py
+Auto-merging src/BulletCollision/BroadphaseCollision/btOverlappingPairCache.cpp
+Auto-merging src/BulletCollision/CollisionDispatch/btCollisionDispatcher.cpp
+Auto-merging src/BulletCollision/CollisionDispatch/btCollisionObject.h
+Auto-merging src/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.cpp
+Auto-merging src/BulletDynamics/Featherstone/btMultiBody.cpp
+ (content): Merge conflict in src/BulletDynamics/Featherstone/btMultiBody.cpp
+Auto-merging src/BulletDynamics/Featherstone/btMultiBody.h
+ (content): Merge conflict in src/BulletDynamics/Featherstone/btMultiBody.h
+Auto-merging src/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.cpp
+ (content): Merge conflict in src/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.cpp
+Auto-merging src/BulletSoftBody/btSoftBody.cpp
+Auto-merging src/BulletSoftBody/btSoftBody.h
+ (content): Merge conflict in src/BulletSoftBody/btSoftBody.h
+Auto-merging src/BulletSoftBody/btSoftBodyHelpers.cpp
+Auto-merging src/BulletSoftBody/btSoftBodyHelpers.h
+Auto-merging src/BulletSoftBody/btSoftMultiBodyDynamicsWorld.cpp
+Auto-merging src/BulletSoftBody/btSoftMultiBodyDynamicsWorld.h
+Auto-merging src/LinearMath/btIDebugDraw.h
+Auto-merging src/LinearMath/btVector3.h
+Automatic merge failed; fix conflicts and then commit the result.

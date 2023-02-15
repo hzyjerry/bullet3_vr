@@ -64,27 +64,28 @@ bool b3ImportMeshUtility::loadAndRegisterMeshFromFileInternal(const std::string&
 		b3FileUtils::extractPath(relativeFileName, pathPrefix, 1024);
 		btVector3 shift(0, 0, 0);
 
-		std::vector<tinyobj::shape_t> shapes;
+		std::vector<bt_tinyobj::shape_t> shapes;
+		bt_tinyobj::attrib_t attribute;
 		{
 			B3_PROFILE("tinyobj::LoadObj");
-			std::string err = LoadFromCachedOrFromObj(shapes, relativeFileName, pathPrefix,fileIO);
+			std::string err = LoadFromCachedOrFromObj(attribute, shapes, relativeFileName, pathPrefix, fileIO);
 			//std::string err = tinyobj::LoadObj(shapes, relativeFileName, pathPrefix);
 		}
 
-		GLInstanceGraphicsShape* gfxShape = btgCreateGraphicsShapeFromWavefrontObj(shapes);
+		GLInstanceGraphicsShape* gfxShape = btgCreateGraphicsShapeFromWavefrontObj(attribute, shapes);
 		{
 			B3_PROFILE("Load Texture");
 			//int textureIndex = -1;
 			//try to load some texture
 			for (int i = 0; meshData.m_textureImage1 == 0 && i < shapes.size(); i++)
 			{
-				const tinyobj::shape_t& shape = shapes[i];
+				const bt_tinyobj::shape_t& shape = shapes[i];
 				meshData.m_rgbaColor[0] = shape.material.diffuse[0];
 				meshData.m_rgbaColor[1] = shape.material.diffuse[1];
 				meshData.m_rgbaColor[2] = shape.material.diffuse[2];
 				meshData.m_rgbaColor[3] = shape.material.transparency;
 				meshData.m_flags |= B3_IMPORT_MESH_HAS_RGBA_COLOR;
-				
+
 				meshData.m_specularColor[0] = shape.material.specular[0];
 				meshData.m_specularColor[1] = shape.material.specular[1];
 				meshData.m_specularColor[2] = shape.material.specular[2];

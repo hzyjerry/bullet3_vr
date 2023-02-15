@@ -3,7 +3,7 @@
  *   Class representing an articulated rigid body. Stores the body's
  *   current state, allows forces and torques to be set, handles
  *   timestepping and implements Featherstone's algorithm.
- *   
+ *
  * COPYRIGHT:
  *   Copyright (C) Stephen Thompson, <stephen@solarflare.org.uk>, 2011-2013
  *   Portions written By Erwin Coumans: connection to LCP solver, various multibody constraints, replacing Eigen math library by Bullet LinearMath and a dedicated 6x6 matrix inverse (solveImatrix)
@@ -14,11 +14,11 @@
  Permission is granted to anyone to use this software for any purpose,
  including commercial applications, and to alter it and redistribute it freely,
  subject to the following restrictions:
- 
+
  1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
  2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
  3. This notice may not be removed or altered from any source distribution.
- 
+
  */
 
 #ifndef BT_MULTIBODY_H
@@ -65,7 +65,7 @@ public:
 	virtual ~btMultiBody();
 
 	//note: fixed link collision with parent is always disabled
-	void setupFixed(int linkIndex,
+	void setupFixed(int i,
 					btScalar mass,
 					const btVector3 &inertia,
 					int parent,
@@ -83,7 +83,7 @@ public:
 						const btVector3 &thisPivotToThisComOffset,
 						bool disableParentCollision);
 
-	void setupRevolute(int linkIndex,  // 0 to num_links-1
+	void setupRevolute(int i,  // 0 to num_links-1
 					   btScalar mass,
 					   const btVector3 &inertia,
 					   int parentIndex,
@@ -93,7 +93,7 @@ public:
 					   const btVector3 &thisPivotToThisComOffset,    // vector from joint axis to my COM, in MY frame
 					   bool disableParentCollision = false);
 
-	void setupSpherical(int linkIndex,  // 0 to num_links-1
+	void setupSpherical(int i,  // 0 to num_links-1
 						btScalar mass,
 						const btVector3 &inertia,
 						int parent,
@@ -182,15 +182,18 @@ public:
 	// get/set pos/vel/rot/omega for the base link
 	//
 
-	const btVector3 getGravity() const { return m_gravity; }
+	const btVector3 getGravity() const
+	{
+		return m_gravity;
+	}
 	void setGravity(const btVector3 &gravity)
 	{
 		m_gravity = gravity;
 	}
 
-	const btVector3 &getBasePos() const 
-	{ 
-		return m_basePos; 
+	const btVector3 &getBasePos() const
+	{
+		return m_basePos;
 	}  // in world frame
 	const btVector3 getBaseVel() const
 	{
@@ -199,12 +202,30 @@ public:
 	const btQuaternion &getWorldToBaseRot() const
 	{
 		return m_baseQuat;
-	}                                                                                               // rotates world vectors into base frame
+	}
+
+	const btVector3 &getInterpolateBasePos() const
+    {
+        return m_basePos_interpolate;
+    }  // in world frame
+    const btQuaternion &getInterpolateWorldToBaseRot() const
+    {
+        return m_baseQuat_interpolate;
+    }
+
+	// rotates world vectors into base frame
 	btVector3 getBaseOmega() const { return btVector3(m_realBuf[0], m_realBuf[1], m_realBuf[2]); }  // in world frame
 
 	void setBasePos(const btVector3 &pos)
 	{
 		m_basePos = pos;
+		if(!isBaseKinematic())
+			m_basePos_interpolate = pos;
+	}
+
+	void setInterpolateBasePos(const btVector3 &pos)
+	{
+		m_basePos_interpolate = pos;
 	}
 
 	void setBaseWorldTransform(const btTransform &tr)
@@ -221,6 +242,20 @@ public:
 		return tr;
 	}
 
+	void setInterpolateBaseWorldTransform(const btTransform &tr)
+	{
+		setInterpolateBasePos(tr.getOrigin());
+		setInterpolateWorldToBaseRot(tr.getRotation().inverse());
+	}
+
+	btTransform getInterpolateBaseWorldTransform() const
+	{
+		btTransform tr;
+		tr.setOrigin(getInterpolateBasePos());
+		tr.setRotation(getInterpolateWorldToBaseRot().inverse());
+		return tr;
+	}
+
 	void setBaseVel(const btVector3 &vel)
 	{
 		m_realBuf[3] = vel[0];
@@ -230,13 +265,24 @@ public:
 	void setWorldToBaseRot(const btQuaternion &rot)
 	{
 		m_baseQuat = rot;  //m_baseQuat asumed to ba alias!?
+		if(!isBaseKinematic())
+			m_baseQuat_interpolate = rot;
 	}
+
+	void setInterpolateWorldToBaseRot(const btQuaternion &rot)
+	{
+		m_baseQuat_interpolate = rot;
+	}
+
+
 	void setBaseOmega(const btVector3 &omega)
 	{
 		m_realBuf[0] = omega[0];
 		m_realBuf[1] = omega[1];
 		m_realBuf[2] = omega[2];
 	}
+
+	void saveKinematicState(btScalar timeStep);
 
 	//
 	// get/set pos/vel for child m_links (i = 0 to num_links-1)
@@ -266,9 +312,18 @@ public:
 	{
 		return &m_realBuf[0];
 	}
-	/*    btScalar * getVelocityVector() 
-	{ 
-		return &real_buf[0]; 
+    const btScalar *getDeltaVelocityVector() const
+    {
+        return &m_deltaV[0];
+    }
+
+    const btScalar *getSplitVelocityVector() const
+    {
+        return &m_splitV[0];
+    }
+	/*    btScalar * getVelocityVector()
+	{
+		return &real_buf[0];
 	}
   */
 
@@ -279,6 +334,8 @@ public:
 
 	const btVector3 &getRVector(int i) const;              // vector from COM(parent(i)) to COM(i), in frame i's coords
 	const btQuaternion &getParentToLocalRot(int i) const;  // rotates vectors in frame parent(i) to vectors in frame i.
+    const btVector3 &getInterpolateRVector(int i) const;              // vector from COM(parent(i)) to COM(i), in frame i's coords
+    const btQuaternion &getInterpolateParentToLocalRot(int i) const;  // rotates vectors in frame parent(i) to vectors in frame i.
 
 	//
 	// transform vectors in local frame of link i to world frame (or vice versa)
@@ -298,8 +355,8 @@ public:
 	// useful for debugging.
 	//
 
-	btScalar getKineticEnergy() const;
-	btVector3 getAngularMomentum() const;
+	// btScalar getKineticEnergy() const;
+	// btVector3 getAngularMomentum() const;
 
 	//
 	// set external forces and torques. Note all external forces/torques are given in the WORLD frame.
@@ -390,6 +447,26 @@ public:
 			m_deltaV[dof] += delta_vee[dof] * multiplier;
 		}
 	}
+	void applyDeltaSplitVeeMultiDof(const btScalar *delta_vee, btScalar multiplier)
+	{
+        for (int dof = 0; dof < 6 + getNumDofs(); ++dof)
+        {
+            m_splitV[dof] += delta_vee[dof] * multiplier;
+        }
+	}
+    void addSplitV()
+    {
+        applyDeltaVeeMultiDof(&m_splitV[0], 1);
+    }
+    void substractSplitV()
+    {
+        applyDeltaVeeMultiDof(&m_splitV[0], -1);
+
+        for (int dof = 0; dof < 6 + getNumDofs(); ++dof)
+        {
+            m_splitV[dof] = 0.f;
+        }
+    }
 	void processDeltaVeeMultiDof2()
 	{
 		applyDeltaVeeMultiDof(&m_deltaV[0], 1);
@@ -399,7 +476,6 @@ public:
 			m_deltaV[dof] = 0.f;
 		}
 	}
-
 	void applyDeltaVeeMultiDof(const btScalar *delta_vee, btScalar multiplier)
 	{
 		//for (int dof = 0; dof < 6 + getNumDofs(); ++dof)
@@ -427,6 +503,9 @@ public:
 
 	// timestep the positions (given current velocities).
 	void stepPositionsMultiDof(btScalar dt, btScalar *pq = 0, btScalar *pqd = 0);
+
+    // predict the positions
+    void predictPositionsMultiDof(btScalar dt);
 
 	//
 	// contacts
@@ -475,8 +554,8 @@ public:
 	{
 		return m_canWakeup;
 	}
-	
-	void setCanWakeup(bool canWakeup) 
+
+	void setCanWakeup(bool canWakeup)
 	{
 		m_canWakeup = canWakeup;
 	}
@@ -485,14 +564,22 @@ public:
 	void goToSleep();
 	void checkMotionAndSleepIfRequired(btScalar timestep);
 
-	bool hasFixedBase() const
-	{
-		return m_fixedBase;
-	}
+	bool hasFixedBase() const;
+
+	bool isBaseKinematic() const;
+
+	bool isBaseStaticOrKinematic() const;
+
+	// set the dynamic type in the base's collision flags.
+	void setBaseDynamicType(int dynamicType);
 
 	void setFixedBase(bool fixedBase)
 	{
 		m_fixedBase = fixedBase;
+		if(m_fixedBase)
+			setBaseDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+		else
+			setBaseDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
 	}
 
 	int getCompanionId() const
@@ -586,7 +673,9 @@ public:
 
 	void compTreeLinkVelocities(btVector3 * omega, btVector3 * vel) const;
 
-	void updateCollisionObjectWorldTransforms(btAlignedObjectArray<btQuaternion> & scratch_q, btAlignedObjectArray<btVector3> & scratch_m);
+	void updateCollisionObjectWorldTransforms(btAlignedObjectArray<btQuaternion> & world_to_local, btAlignedObjectArray<btVector3> & local_origin);
+    void updateCollisionObjectInterpolationWorldTransforms(btAlignedObjectArray<btQuaternion> & world_to_local, btAlignedObjectArray<btVector3> & local_origin);
+
 
 	virtual int calculateSerializeBufferSize() const;
 
@@ -642,6 +731,25 @@ public:
 		btVector3 &top_out,         // top part of output vector
 		btVector3 &bottom_out);      // bottom part of output vector
 
+	void setLinkDynamicType(const int i, int type);
+
+	bool isLinkStaticOrKinematic(const int i) const;
+
+	bool isLinkKinematic(const int i) const;
+
+	bool isLinkAndAllAncestorsStaticOrKinematic(const int i) const;
+
+	bool isLinkAndAllAncestorsKinematic(const int i) const;
+
+	void setSleepThreshold(btScalar sleepThreshold)
+	{
+		m_sleepEpsilon = sleepThreshold;
+	}
+
+	void setSleepTimeout(btScalar sleepTimeout)
+	{
+		this->m_sleepTimeout = sleepTimeout;
+	}
 
 
 private:
@@ -670,7 +778,9 @@ private:
 	const char *m_baseName;                   //memory needs to be manager by user!
 
 	btVector3 m_basePos;      // position of COM of base (world frame)
+    btVector3 m_basePos_interpolate;      // position of interpolated COM of base (world frame)
 	btQuaternion m_baseQuat;  // rotates world points into base frame
+	btQuaternion m_baseQuat_interpolate;
 
 	btScalar m_baseMass;      // mass of the base
 	btVector3 m_baseInertia;  // inertia of the base (in local frame; diagonal)
@@ -698,6 +808,7 @@ private:
 	//  offset         size         array
 	//   0              num_links+1  rot_from_parent
 	//
+	btAlignedObjectArray<btScalar> m_splitV;
 	btAlignedObjectArray<btScalar> m_deltaV;
 	btAlignedObjectArray<btScalar> m_realBuf;
 	btAlignedObjectArray<btVector3> m_vectorBuf;
@@ -718,6 +829,9 @@ private:
 	bool m_canSleep;
 	bool m_canWakeup;
 	btScalar m_sleepTimer;
+	btScalar m_sleepEpsilon;
+	btScalar m_sleepTimeout;
+
 
 	void *m_userObjectPointer;
 	int m_userIndex2;
@@ -740,6 +854,10 @@ private:
 
 	///the m_needsJointFeedback gets updated/computed during the stepVelocitiesMultiDof and it for internal usage only
 	bool m_internalNeedsJointFeedback;
+
+  //If enabled, calculate the velocity based on kinematic transform changes. Currently only implemented for the base.
+	bool m_kinematic_calculate_velocity;
+
 };
 
 struct btMultiBodyLinkDoubleData

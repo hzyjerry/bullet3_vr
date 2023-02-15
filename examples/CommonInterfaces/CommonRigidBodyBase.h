@@ -7,7 +7,6 @@
 #include "CommonGUIHelperInterface.h"
 #include "CommonRenderInterface.h"
 #include "CommonCameraInterface.h"
-
 #include "CommonGraphicsAppInterface.h"
 #include "CommonWindowInterface.h"
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
@@ -439,12 +438,15 @@ struct CommonRigidBodyBase : public CommonExampleInterface
 
 	virtual void renderScene()
 	{
+		if (m_dynamicsWorld)
 		{
-			m_guiHelper->syncPhysicsToGraphics(m_dynamicsWorld);
-		}
+			{
+				m_guiHelper->syncPhysicsToGraphics(m_dynamicsWorld);
+			}
 
-		{
-			m_guiHelper->render(m_dynamicsWorld);
+			{
+				m_guiHelper->render(m_dynamicsWorld);
+			}
 		}
 	}
 };

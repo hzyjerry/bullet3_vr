@@ -2,8 +2,8 @@
 #define BULLET_URDF_IMPORTER_H
 
 #include "URDFImporterInterface.h"
-
 #include "UrdfRenderingInterface.h"
+#include "UrdfParser.h"
 
 struct BulletURDFTexture
 {
@@ -60,6 +60,7 @@ public:
 
 	virtual bool getJointInfo(int urdfLinkIndex, btTransform& parent2joint, btTransform& linkTransformInWorld, btVector3& jointAxisInJointSpace, int& jointType, btScalar& jointLowerLimit, btScalar& jointUpperLimit, btScalar& jointDamping, btScalar& jointFriction) const;
 	virtual bool getJointInfo2(int urdfLinkIndex, btTransform& parent2joint, btTransform& linkTransformInWorld, btVector3& jointAxisInJointSpace, int& jointType, btScalar& jointLowerLimit, btScalar& jointUpperLimit, btScalar& jointDamping, btScalar& jointFriction, btScalar& jointMaxForce, btScalar& jointMaxVelocity) const;
+	virtual bool getJointInfo3(int urdfLinkIndex, btTransform& parent2joint, btTransform& linkTransformInWorld, btVector3& jointAxisInJointSpace, int& jointType, btScalar& jointLowerLimit, btScalar& jointUpperLimit, btScalar& jointDamping, btScalar& jointFriction, btScalar& jointMaxForce, btScalar& jointMaxVelocity, btScalar& twistLimit) const;
 
 	virtual bool getRootTransformInWorld(btTransform& rootTransformInWorld) const;
 	virtual void setRootTransformInWorld(const btTransform& rootTransformInWorld);
@@ -73,6 +74,8 @@ public:
 	virtual int getUrdfFromCollisionShape(const btCollisionShape* collisionShape, UrdfCollision& collision) const;
 
 	///todo(erwincoumans) refactor this convertLinkCollisionShapes/memory allocation
+
+	virtual const struct UrdfModel* getUrdfModel() const;
 
 	virtual class btCompoundShape* convertLinkCollisionShapes(int linkIndex, const char* pathPrefix, const btTransform& localInertiaFrame) const;
 
@@ -89,6 +92,8 @@ public:
 
 	virtual void setEnableTinyRenderer(bool enable);
 	void convertURDFToVisualShapeInternal(const struct UrdfVisual* visual, const char* urdfPathPrefix, const class btTransform& visualTransform, btAlignedObjectArray<struct GLInstanceVertex>& verticesOut, btAlignedObjectArray<int>& indicesOut, btAlignedObjectArray<struct BulletURDFTexture>& texturesOut, struct b3ImportMeshData& meshData) const;
+	const struct UrdfDeformable& getDeformableModel() const;
+	const struct UrdfReducedDeformable& getReducedDeformableModel() const;
 };
 
 #endif  //BULLET_URDF_IMPORTER_H

@@ -1,9 +1,11 @@
 #ifndef PHYSICS_SERVER_COMMAND_PROCESSOR_H
 #define PHYSICS_SERVER_COMMAND_PROCESSOR_H
 
+#include "LinearMath/btHashMap.h"
 #include "LinearMath/btVector3.h"
 
 #include "PhysicsCommandProcessorInterface.h"
+#include "../Importers/ImportURDFDemo/UrdfParser.h"
 
 struct SharedMemLines
 {
@@ -17,8 +19,11 @@ class PhysicsServerCommandProcessor : public CommandProcessorInterface
 {
 	struct PhysicsServerCommandProcessorInternalData* m_data;
 
-	void resetSimulation();
+	void resetSimulation(int flags = 0);
 	void createThreadPool();
+
+	class btDeformableMultiBodyDynamicsWorld* getDeformableWorld();
+	class btSoftMultiBodyDynamicsWorld* getSoftWorld();
 
 protected:
 	bool processStateLoggingCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -27,6 +32,7 @@ protected:
 	bool processCreateCollisionShapeCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestMeshDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processCreateVisualShapeCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
+	bool processResetMeshDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processCustomCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processUserDebugDrawCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processSetVRCameraStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -40,6 +46,8 @@ protected:
 	bool processSendDesiredStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestActualStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestContactpointInformationCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
+	bool processRequestDeformableContactpointHelper(const struct SharedMemoryCommand& clientCmd);
+    bool processRequestDeformableDeformableContactpointHelper(const struct SharedMemoryCommand& clientCmd);
 	bool processRequestBodyInfoCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processLoadSDFCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processCreateMultiBodyCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -55,6 +63,7 @@ protected:
 	bool processProfileTimingCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestCollisionInfoCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processForwardDynamicsCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
+	bool performCollisionDetectionCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestInternalDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processChangeDynamicsInfoCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processSetAdditionalSearchPathCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -77,6 +86,7 @@ protected:
 	bool processRemoveBodyCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processCreateUserConstraintCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processCalculateInverseKinematicsCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
+	bool processCalculateInverseKinematicsCommand2(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestVisualShapeInfoCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestCollisionShapeInfoCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processUpdateVisualShapeCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -87,6 +97,7 @@ protected:
 	bool processLoadMJCFCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRestoreStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processSaveStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
+	bool processRemoveStateCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processSyncUserDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processRequestUserDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
 	bool processAddUserDataCommand(const struct SharedMemoryCommand& clientCmd, struct SharedMemoryStatus& serverStatusOut, char* bufferServerToClient, int bufferSizeInBytes);
@@ -103,6 +114,8 @@ protected:
 	bool loadMjcf(const char* fileName, char* bufferServerToClient, int bufferSizeInBytes, bool useMultiBody, int flags);
 
 	bool processImportedObjects(const char* fileName, char* bufferServerToClient, int bufferSizeInBytes, bool useMultiBody, int flags, class URDFImporterInterface& u2b);
+	bool processDeformable(const UrdfDeformable& deformable, const btVector3& pos, const btQuaternion& orn, int* bodyUniqueId, char* bufferServerToClient, int bufferSizeInBytes, btScalar scale, bool useSelfCollision);
+	bool processReducedDeformable(const UrdfReducedDeformable& deformable, const btVector3& pos, const btQuaternion& orn, int* bodyUniqueId, char* bufferServerToClient, int bufferSizeInBytes, btScalar scale, bool useSelfCollision);
 
 	bool supportsJointMotor(class btMultiBody* body, int linkIndex);
 
@@ -117,7 +130,7 @@ public:
 
 	void createJointMotors(class btMultiBody* body);
 
-	virtual void createEmptyDynamicsWorld();
+	virtual void createEmptyDynamicsWorld(int flags = 0);
 	virtual void deleteDynamicsWorld();
 
 	virtual bool connect()
@@ -143,6 +156,7 @@ public:
 	virtual void physicsDebugDraw(int debugDrawFlags);
 	virtual void setGuiHelper(struct GUIHelperInterface* guiHelper);
 	virtual void syncPhysicsToGraphics();
+	virtual void syncPhysicsToGraphics2();
 
 	//@todo(erwincoumans) Should we have shared memory commands for picking objects?
 	///The pickBody method will try to pick the first body along a ray, return true if succeeds, false otherwise
@@ -180,7 +194,9 @@ public:
 	virtual void setVRTeleportOrientation(const btQuaternion& vrTeleportOrn);
 
 private:
-	void addTransformChangedNotifications();
+	void addBodyChangedNotifications();
+	int addUserData(int bodyUniqueId, int linkIndex, int visualShapeIndex, const char* key, const char* valueBytes, int valueLength, int valueType);
+	void addUserData(const btHashMap<btHashString, std::string>& user_data_entries, int bodyUniqueId, int linkIndex = -1, int visualShapeIndex = -1);
 };
 
 #endif  //PHYSICS_SERVER_COMMAND_PROCESSOR_H

@@ -661,11 +661,17 @@ void SimpleOpenGL2Renderer::drawPoint(const float* position, const float color[4
 void SimpleOpenGL2Renderer::drawPoint(const double* position, const double color[4], double pointDrawSize)
 {
 }
+void SimpleOpenGL2Renderer::drawPoints(const float* positions, const float* colors, int numPoints, int pointStrideInBytes, float pointDrawSize)
+{
+}
 
-void SimpleOpenGL2Renderer::updateShape(int shapeIndex, const float* vertices)
+void SimpleOpenGL2Renderer::updateShape(int shapeIndex, const float* vertices, int numVertices)
 {
 	SimpleGL2Shape* shape = m_data->m_shapes[shapeIndex];
 	int numvertices = shape->m_vertices.size();
+	b3Assert(numVertices = numvertices);
+	if (numVertices != numvertices)
+		return;
 
 	for (int i = 0; i < numvertices; i++)
 	{

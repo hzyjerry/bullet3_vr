@@ -8,7 +8,7 @@ p.setTimeStep(1./500)
 #p.setDefaultContactERP(0)
 #urdfFlags = p.URDF_USE_SELF_COLLISION+p.URDF_USE_SELF_COLLISION_EXCLUDE_ALL_PARENTS 
 urdfFlags = p.URDF_USE_SELF_COLLISION
-quadruped = p.loadURDF("laikago.urdf",[0,0,.5],[0,0.5,0.5,0], flags = urdfFlags,useFixedBase=False)
+quadruped = p.loadURDF("laikago_toes.urdf",[0,0,.5],[0,0.5,0.5,0], flags = urdfFlags,useFixedBase=False)
 
 #enable collision between lower legs
 
@@ -53,21 +53,16 @@ p.setRealTimeSimulation(0)
 joints=[]
 
 with open("data1.txt","r") as filestream:
-        for line in filestream:
-		print("line=",line)
+	for line in filestream:
 		maxForce = p.readUserDebugParameter(maxForceId)
-                currentline = line.split(",")
-                #print (currentline)
-                #print("-----")
-                frame = currentline[0]
-                t = currentline[1]
-                #print("frame[",frame,"]")
-                joints=currentline[2:14]
-                #print("joints=",joints)
+		currentline = line.split(",")
+		frame = currentline[0]
+		t = currentline[1]
+		joints=currentline[2:14]
 		for j in range (12):
 			targetPos = float(joints[j])
 			p.setJointMotorControl2(quadruped,jointIds[j],p.POSITION_CONTROL,jointDirections[j]*targetPos+jointOffsets[j], force=maxForce)
- 		p.stepSimulation()
+		p.stepSimulation()
 		for lower_leg in lower_legs:
 			#print("points for ", quadruped, " link: ", lower_leg)
 			pts = p.getContactPoints(quadruped,-1, lower_leg)
@@ -77,6 +72,7 @@ with open("data1.txt","r") as filestream:
 		time.sleep(1./500.)
 
 
+index = 0
 for j in range (p.getNumJoints(quadruped)):
         p.changeDynamics(quadruped,j,linearDamping=0, angularDamping=0)
         info = p.getJointInfo(quadruped,j)
@@ -85,7 +81,8 @@ for j in range (p.getNumJoints(quadruped)):
         jointName = info[1]
         jointType = info[2]
         if (jointType==p.JOINT_PRISMATIC or jointType==p.JOINT_REVOLUTE):
-                paramIds.append(p.addUserDebugParameter(jointName.decode("utf-8"),-4,4,(js[0]-jointOffsets[j])/jointDirections[j]))
+                paramIds.append(p.addUserDebugParameter(jointName.decode("utf-8"),-4,4,(js[0]-jointOffsets[index])/jointDirections[index]))
+                index=index+1
 
 
 p.setRealTimeSimulation(1)

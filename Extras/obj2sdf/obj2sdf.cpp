@@ -4,6 +4,20 @@
 /// this will make it easier to load complex obj files into pybullet
 /// see for example export in data/kitchens/fathirmutfak.sdf
 
+///Bullet Continuous Collision Detection and Physics Library
+///Erwin Coumans (C) 2018
+///http://bulletphysics.org
+///
+///This software is provided 'as-is', without any express or implied warranty.
+///In no event will the authors be held liable for any damages arising from the use of this software.
+///Permission is granted to anyone to use this software for any purpose,
+///including commercial applications, and to alter it and redistribute it freely,
+///subject to the following restrictions:
+///
+///1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+///2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+///3. This notice may not be removed or altered from any source distribution.
+	
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -16,16 +30,17 @@
 #include "Bullet3Common/b3HashMap.h"
 #include "../Utils/b3BulletDefaultFileIO.h"
 
+using bt_tinyobj::index_t;
+
 struct ShapeContainer
 {
 	std::string m_matName;
 	std::string m_shapeName;
-	tinyobj::material_t material;
+	bt_tinyobj::material_t material;
 	std::vector<float> positions;
 	std::vector<float> normals;
 	std::vector<float> texcoords;
-	std::vector<unsigned int> indices;
-
+	std::vector<index_t> indices;
 	b3AlignedObjectArray<int> m_shapeIndices;
 };
 
@@ -76,10 +91,11 @@ int main(int argc, char* argv[])
 	char materialPrefixPath[MAX_PATH_LEN];
 	b3FileUtils::extractPath(fileNameWithPath, materialPrefixPath, MAX_PATH_LEN);
 
-	std::vector<tinyobj::shape_t> shapes;
+	std::vector<bt_tinyobj::shape_t> shapes;
+	bt_tinyobj::attrib_t attribute;
 
 	b3BulletDefaultFileIO fileIO;
-	std::string err = tinyobj::LoadObj(shapes, fileNameWithPath, materialPrefixPath,&fileIO);
+	std::string err = bt_tinyobj::LoadObj(attribute, shapes, fileNameWithPath, materialPrefixPath, &fileIO);
 
 	char sdfFileName[MAX_PATH_LEN];
 	sprintf(sdfFileName, "%s%s.sdf", materialPrefixPath, "newsdf");
@@ -94,8 +110,8 @@ int main(int argc, char* argv[])
 
 	for (int s = 0; s < (int)shapes.size(); s++)
 	{
-		tinyobj::shape_t& shape = shapes[s];
-		tinyobj::material_t mat = shape.material;
+		bt_tinyobj::shape_t& shape = shapes[s];
+		bt_tinyobj::material_t mat = shape.material;
 
 		b3HashString key = mat.name.length() ? mat.name.c_str() : "";
 		if (!gMaterialNames.find(key))
@@ -117,20 +133,20 @@ int main(int argc, char* argv[])
 			int curTexcoords = shapeC->texcoords.size() / 2;
 
 			int faceCount = shape.mesh.indices.size();
-			int vertexCount = shape.mesh.positions.size();
+			int vertexCount = attribute.vertices.size();
 			for (int v = 0; v < vertexCount; v++)
 			{
-				shapeC->positions.push_back(shape.mesh.positions[v]);
+				shapeC->positions.push_back(attribute.vertices[v]);
 			}
-			int numNormals = int(shape.mesh.normals.size());
+			int numNormals = int(attribute.normals.size());
 			for (int vn = 0; vn < numNormals; vn++)
 			{
-				shapeC->normals.push_back(shape.mesh.normals[vn]);
+				shapeC->normals.push_back(attribute.normals[vn]);
 			}
-			int numTexCoords = int(shape.mesh.texcoords.size());
+			int numTexCoords = int(attribute.texcoords.size());
 			for (int vt = 0; vt < numTexCoords; vt++)
 			{
-				shapeC->texcoords.push_back(shape.mesh.texcoords[vt]);
+				shapeC->texcoords.push_back(attribute.texcoords[vt]);
 			}
 
 			for (int face = 0; face < faceCount; face += 3)
@@ -140,9 +156,14 @@ int main(int argc, char* argv[])
 					continue;
 				}
 
-				shapeC->indices.push_back(shape.mesh.indices[face] + curPositions);
-				shapeC->indices.push_back(shape.mesh.indices[face + 1] + curPositions);
-				shapeC->indices.push_back(shape.mesh.indices[face + 2] + curPositions);
+				index_t index;
+				for (int ii = 0; ii < 3; ii++)
+				{
+					index.vertex_index = shape.mesh.indices[face + ii].vertex_index + curPositions;
+					index.normal_index = shape.mesh.indices[face + ii].normal_index + curNormals;
+					index.texcoord_index = shape.mesh.indices[face + ii].texcoord_index + curTexcoords;
+					shapeC->indices.push_back(index);
+				}
 			}
 		}
 	}
@@ -191,7 +212,7 @@ int main(int argc, char* argv[])
 
 			int faceCount = shapeCon->indices.size();
 			int vertexCount = shapeCon->positions.size();
-			tinyobj::material_t mat = shapeCon->material;
+			bt_tinyobj::material_t mat = shapeCon->material;
 			if (shapeCon->m_matName.length())
 			{
 				const char* objName = shapeCon->m_matName.c_str();
@@ -236,9 +257,9 @@ int main(int argc, char* argv[])
 					continue;
 				}
 				fprintf(f, "f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-						shapeCon->indices[face] + 1, shapeCon->indices[face] + 1, shapeCon->indices[face] + 1,
-						shapeCon->indices[face + 1] + 1, shapeCon->indices[face + 1] + 1, shapeCon->indices[face + 1] + 1,
-						shapeCon->indices[face + 2] + 1, shapeCon->indices[face + 2] + 1, shapeCon->indices[face + 2] + 1);
+						shapeCon->indices[face].vertex_index + 1, shapeCon->indices[face].texcoord_index + 1, shapeCon->indices[face].normal_index + 1,
+						shapeCon->indices[face + 1].vertex_index + 1, shapeCon->indices[face + 1].texcoord_index + 1, shapeCon->indices[face + 1].normal_index + 1,
+						shapeCon->indices[face + 2].vertex_index + 1, shapeCon->indices[face + 2].texcoord_index + 1, shapeCon->indices[face + 2].normal_index + 1);
 			}
 			fclose(f);
 
@@ -250,7 +271,7 @@ int main(int argc, char* argv[])
 			fprintf(sdfFile,
 					"\t\t<model name='%s'>\n"
 					"\t\t\t<static>1</static>\n"
-					"\t\t\t<pose frame=''>0 0 0 0 0 0</pose>\n"
+					"\t\t\t<pose >0 0 0 0 0 0</pose>\n"
 					"\t\t\t<link name='link_d%d'>\n"
 					"\t\t\t<inertial>\n"
 					"\t\t\t<mass>0</mass>\n"
@@ -296,7 +317,7 @@ int main(int argc, char* argv[])
 	{
 		for (int s = 0; s < (int)shapes.size(); s++)
 		{
-			tinyobj::shape_t& shape = shapes[s];
+			bt_tinyobj::shape_t& shape = shapes[s];
 
 			if (shape.name.length())
 			{
@@ -329,8 +350,8 @@ int main(int argc, char* argv[])
 			}
 
 			int faceCount = shape.mesh.indices.size();
-			int vertexCount = shape.mesh.positions.size();
-			tinyobj::material_t mat = shape.material;
+			int vertexCount = attribute.vertices.size();
+			bt_tinyobj::material_t mat = shape.material;
 			if (shape.name.length())
 			{
 				const char* objName = shape.name.c_str();
@@ -339,7 +360,7 @@ int main(int argc, char* argv[])
 			}
 			for (int v = 0; v < vertexCount / 3; v++)
 			{
-				fprintf(f, "v %f %f %f\n", shape.mesh.positions[v * 3 + 0], shape.mesh.positions[v * 3 + 1], shape.mesh.positions[v * 3 + 2]);
+				fprintf(f, "v %f %f %f\n", attribute.vertices[v * 3 + 0], attribute.vertices[v * 3 + 1], attribute.vertices[v * 3 + 2]);
 			}
 
 			if (mat.name.length())
@@ -352,18 +373,18 @@ int main(int argc, char* argv[])
 			}
 
 			fprintf(f, "\n");
-			int numNormals = int(shape.mesh.normals.size());
+			int numNormals = int(attribute.normals.size());
 
 			for (int vn = 0; vn < numNormals / 3; vn++)
 			{
-				fprintf(f, "vn %f %f %f\n", shape.mesh.normals[vn * 3 + 0], shape.mesh.normals[vn * 3 + 1], shape.mesh.normals[vn * 3 + 2]);
+				fprintf(f, "vn %f %f %f\n", attribute.normals[vn * 3 + 0], attribute.normals[vn * 3 + 1], attribute.normals[vn * 3 + 2]);
 			}
 
 			fprintf(f, "\n");
-			int numTexCoords = int(shape.mesh.texcoords.size());
+			int numTexCoords = int(attribute.texcoords.size());
 			for (int vt = 0; vt < numTexCoords / 2; vt++)
 			{
-				fprintf(f, "vt %f %f\n", shape.mesh.texcoords[vt * 2 + 0], shape.mesh.texcoords[vt * 2 + 1]);
+				fprintf(f, "vt %f %f\n", attribute.texcoords[vt * 2 + 0], attribute.texcoords[vt * 2 + 1]);
 			}
 
 			fprintf(f, "s off\n");
@@ -375,11 +396,11 @@ int main(int argc, char* argv[])
 					continue;
 				}
 				fprintf(f, "f %d/%d/%d %d/%d/%d %d/%d/%d\n",
-						shape.mesh.indices[face] + 1, shape.mesh.indices[face] + 1, shape.mesh.indices[face] + 1,
-						shape.mesh.indices[face + 1] + 1, shape.mesh.indices[face + 1] + 1, shape.mesh.indices[face + 1] + 1,
-						shape.mesh.indices[face + 2] + 1, shape.mesh.indices[face + 2] + 1, shape.mesh.indices[face + 2] + 1);
+                                        shape.mesh.indices[face].vertex_index + 1,     shape.mesh.indices[face].texcoord_index + 1,     shape.mesh.indices[face].normal_index + 1,
+                                        shape.mesh.indices[face + 1].vertex_index + 1, shape.mesh.indices[face + 1].texcoord_index + 1, shape.mesh.indices[face + 1].normal_index + 1,
+                                        shape.mesh.indices[face + 2].vertex_index + 1, shape.mesh.indices[face + 2].texcoord_index + 1, shape.mesh.indices[face + 2].normal_index + 1);
 			}
-			fclose(f);
+                        fclose(f);
 
 			float kdRed = mat.diffuse[0];
 			float kdGreen = mat.diffuse[1];
@@ -390,7 +411,7 @@ int main(int argc, char* argv[])
 			fprintf(sdfFile,
 					"\t\t<model name='%s'>\n"
 					"\t\t\t<static>1</static>\n"
-					"\t\t\t<pose frame=''>0 0 0 0 0 0</pose>\n"
+					"\t\t\t<pose>0 0 0 0 0 0</pose>\n"
 					"\t\t\t<link name='link_d%d'>\n"
 					"\t\t\t<inertial>\n"
 					"\t\t\t<mass>0</mass>\n"

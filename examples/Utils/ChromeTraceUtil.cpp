@@ -5,6 +5,7 @@
 #include "LinearMath/btAlignedObjectArray.h"
 #include "Bullet3Common/b3Logging.h"
 #include <stdio.h>
+#include <climits>
 
 struct btTiming
 {
@@ -50,6 +51,11 @@ struct btTimings
 
 			m_firstTiming = false;
 
+			if (startTime > endTime)
+			{
+				endTime = startTime;
+			}
+
 			unsigned long long int startTimeDiv1000 = startTime / 1000;
 			unsigned long long int endTimeDiv1000 = endTime / 1000;
 
@@ -62,10 +68,7 @@ struct btTimings
 
 #else
 
-			if (startTime > endTime)
-			{
-				endTime = startTime;
-			}
+			
 			unsigned int startTimeRem1000 = startTime % 1000;
 			unsigned int endTimeRem1000 = endTime % 1000;
 
@@ -109,16 +112,15 @@ struct btTimings
 			sprintf(newname, "%s%d", name, counter2++);
 
 #ifdef _WIN32
-
 			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%I64d.%s ,\"ph\":\"B\",\"name\":\"%s\",\"args\":{}},\n",
 					threadId, startTimeDiv1000, startTimeRem1000Str, newname);
 			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%I64d.%s ,\"ph\":\"E\",\"name\":\"%s\",\"args\":{}}",
 					threadId, endTimeDiv1000, endTimeRem1000Str, newname);
-
 #else
-			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%" PRIu64 ".%s ,\"ph\":\"B\",\"name\":\"%s\",\"args\":{}},\n",
+			// Note: on 64b build, PRIu64 resolves in 'lu' whereas timings ('ts') have to be printed as 'llu'.
+			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%llu.%s ,\"ph\":\"B\",\"name\":\"%s\",\"args\":{}},\n",
 					threadId, startTimeDiv1000, startTimeRem1000Str, newname);
-			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%" PRIu64 ".%s ,\"ph\":\"E\",\"name\":\"%s\",\"args\":{}}",
+			fprintf(gTimingFile, "{\"cat\":\"timing\",\"pid\":1,\"tid\":%d,\"ts\":%llu.%s ,\"ph\":\"E\",\"name\":\"%s\",\"args\":{}}",
 					threadId, endTimeDiv1000, endTimeRem1000Str, newname);
 #endif
 #endif

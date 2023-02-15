@@ -802,6 +802,14 @@ public:
 		///don't do CCD when the collision filters are not matching
 		if (!ClosestConvexResultCallback::needsCollision(proxy0))
 			return false;
+		if (m_pairCache->getOverlapFilterCallback()) {
+			btBroadphaseProxy* proxy1 = m_me->getBroadphaseHandle();
+			bool collides = m_pairCache->needsBroadphaseCollision(proxy0, proxy1);
+			if (!collides)
+			{
+				return false;
+			}
+		}
 
 		btCollisionObject* otherObj = (btCollisionObject*)proxy0->m_clientObject;
 
@@ -896,8 +904,8 @@ void btDiscreteDynamicsWorld::createPredictiveContactsInternal(btRigidBody** bod
 						btVector3 distVec = (predictedTrans.getOrigin() - body->getWorldTransform().getOrigin()) * sweepResults.m_closestHitFraction;
 						btScalar distance = distVec.dot(-sweepResults.m_hitNormalWorld);
 
-						btPersistentManifold* manifold = m_dispatcher1->getNewManifold(body, sweepResults.m_hitCollisionObject);
 						btMutexLock(&m_predictiveManifoldsMutex);
+						btPersistentManifold* manifold = m_dispatcher1->getNewManifold(body, sweepResults.m_hitCollisionObject);
 						m_predictiveManifolds.push_back(manifold);
 						btMutexUnlock(&m_predictiveManifoldsMutex);
 
@@ -1438,9 +1446,7 @@ void btDiscreteDynamicsWorld::serializeDynamicsWorldInfo(btSerializer* serialize
 
 	worldInfo->m_solverInfo.m_splitImpulse = getSolverInfo().m_splitImpulse;
 
-	// Fill padding with zeros to appease msan.
-	memset(worldInfo->m_solverInfo.m_padding, 0, sizeof(worldInfo->m_solverInfo.m_padding));
-
+	
 #ifdef BT_USE_DOUBLE_PRECISION
 	const char* structType = "btDynamicsWorldDoubleData";
 #else   //BT_USE_DOUBLE_PRECISION

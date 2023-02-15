@@ -82,6 +82,7 @@ struct InMemoryFileIO : public CommonFileIOInterface
 				m_numFrees++;
 			}
 		}
+		m_fileCache.clear();
 	}
 
 	char* allocateBuffer(int len)
@@ -319,6 +320,7 @@ struct WrapperFileIO : public CommonFileIOInterface
 		{
 			removeFileIOInterface(i);
 		}
+		m_cachedFiles.clearCache();
 	}
 
 	int addFileIOInterface(CommonFileIOInterface* fileIO)
@@ -388,35 +390,37 @@ struct WrapperFileIO : public CommonFileIOInterface
 						int childHandle = childFileIO->fileOpen(fileName, mode);
 						if (childHandle>=0)
 						{
-							int fileSize = childFileIO->getFileSize(childHandle);
-							char* buffer = 0;
-							if (fileSize)
-							{
-								buffer = m_cachedFiles.allocateBuffer(fileSize);
-								if (buffer)
-								{
-									int readBytes = childFileIO->fileRead(childHandle, buffer, fileSize);
-									if (readBytes!=fileSize)
-									{
-										if (readBytes<fileSize)
-										{
-											fileSize = readBytes;
-										} else
-										{
-											printf("WrapperFileIO error: reading more bytes (%d) then reported file size (%d) of file %s.\n", readBytes, fileSize, fileName);
-										}
-									}
-								} else
-								{
-									fileSize=0;
-								}
-							}
-
-							//potentially register a zero byte file, or files that only can be read partially
 							if (m_enableFileCaching)
 							{
+								int fileSize = childFileIO->getFileSize(childHandle);
+								char* buffer = 0;
+								if (fileSize)
+								{
+									buffer = m_cachedFiles.allocateBuffer(fileSize);
+									if (buffer)
+									{
+										int readBytes = childFileIO->fileRead(childHandle, buffer, fileSize);
+										if (readBytes!=fileSize)
+										{
+											if (readBytes<fileSize)
+												{
+												fileSize = readBytes;
+											} else
+											{
+												printf("WrapperFileIO error: reading more bytes (%d) then reported file size (%d) of file %s.\n", readBytes, fileSize, fileName);
+											}
+										}
+									} else
+									{
+										fileSize=0;
+									}
+								}
+
+								//potentially register a zero byte file, or files that only can be read partially
+							
 								m_cachedFiles.registerFile(fileName, buffer, fileSize);
 							}
+							
 							childFileIO->fileClose(childHandle);
 							break;
 						}

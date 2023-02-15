@@ -5,7 +5,7 @@ from __future__ import print_function
 #python proto2csv.py --proto_file=/tmp/logs/minitaur_log_2019-01-27-12-59-31 --csv_file=/tmp/logs/out.csv
 #each line in csv contains: angle, velocity, action, torque
 
-import tensorflow as tf
+import tf.compat.v1 as tf
 import argparse
 import numpy
 from pybullet_envs.minitaur.envs import minitaur_logging
@@ -35,12 +35,11 @@ def main(argv):
       #print("motorState.velocity=",motorState.velocity)
       #print("motorState.action=",motorState.action)
       #print("motorState.torque=",motorState.torque)
-      recs.append([motorState.angle,motorState.velocity,motorState.action,motorState.torque])
-		
+      recs.append([motorState.angle, motorState.velocity, motorState.action, motorState.torque])
+
   a = numpy.array(recs)
   numpy.savetxt(FLAGS.csv_file, a, delimiter=",")
 
+
 if __name__ == "__main__":
   tf.app.run(main)
-
-

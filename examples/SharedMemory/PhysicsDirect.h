@@ -28,11 +28,17 @@ protected:
 
 	void processAddUserData(const struct SharedMemoryStatus& serverCmd);
 
+	bool processRequestBodyInfo(const struct SharedMemoryCommand& command, SharedMemoryStatus& status);
+
+	bool processCustomCommand(const struct SharedMemoryCommand& orgCommand);
+
 	void postProcessStatus(const struct SharedMemoryStatus& serverCmd);
 
 	void resetData();
 
 	void removeCachedBody(int bodyUniqueId);
+
+	void clearCachedBodies();
 
 public:
 	PhysicsDirect(class PhysicsCommandProcessorInterface* physSdk, bool passSdkOwnership);
@@ -111,6 +117,8 @@ public:
 	virtual void getCachedRaycastHits(struct b3RaycastInformation* raycastHits);
 
 	virtual void getCachedMassMatrix(int dofCountCheck, double* massMatrix);
+
+	virtual bool getCachedReturnData(b3UserDataValue* returnData);
 
 	//the following APIs are for internal use for visualization:
 	virtual bool connect(struct GUIHelperInterface* guiHelper);
